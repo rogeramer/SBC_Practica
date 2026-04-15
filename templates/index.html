@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameBot - Recomanador de Videojocs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background-glow glow-1"></div>
+    <div class="background-glow glow-2"></div>
+
+    <main class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">🎮</div>
+                <div>
+                    <h1>GameBot</h1>
+                    <p>Recomanador de videojocs</p>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <h2>Què puc fer?</h2>
+                <ul>
+                    <li>Recomanar jocs segons els teus gustos</li>
+                    <li>Entendre preferències com acció, història o multijugador</li>
+                    <li>Donar-te una guia inicial d'alguns jocs</li>
+                </ul>
+            </div>
+
+            <div class="sidebar-card suggestions">
+                <h2>Exemples</h2>
+                <button class="suggestion-btn" onclick="fillSuggestion('Vull un joc relaxat per jugar sol')">
+                    Joc relaxat per jugar sol
+                </button>
+                <button class="suggestion-btn" onclick="fillSuggestion('Busco un joc competitiu per jugar amb amics')">
+                    Competitiu amb amics
+                </button>
+                <button class="suggestion-btn" onclick="fillSuggestion('M\'agradaria un joc amb història i moltes hores')">
+                    Història i moltes hores
+                </button>
+                <button class="suggestion-btn" onclick="fillSuggestion('Dona\'m una guia de Minecraft')">
+                    Guia de Minecraft
+                </button>
+            </div>
+
+            <button class="reset-btn" onclick="resetChat()">Reinicia conversa</button>
+        </aside>
+
+        <section class="chat-panel">
+            <header class="chat-header">
+                <div>
+                    <h2>Assistent de videojocs</h2>
+                    <p>Explica'm què t'agrada i et recomanaré algun joc</p>
+                </div>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span>En línia</span>
+                </div>
+            </header>
+
+            <div id="chat-box" class="chat-box">
+                <div class="message bot">
+                    <div class="avatar">🤖</div>
+                    <div class="bubble">
+                        Hola! Sóc el teu chatbot de videojocs. Digues-me quin tipus de joc busques i t'ajudaré a trobar-ne un.
+                    </div>
+                </div>
+            </div>
+
+            <form class="chat-input-area" onsubmit="handleSubmit(event)">
+                <input
+                    type="text"
+                    id="user-input"
+                    placeholder="Escriu aquí... Ex: vull un joc d'acció per jugar amb amics"
+                    autocomplete="off"
+                >
+                <button type="submit" id="send-btn">Enviar</button>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+
+        function addMessage(sender, text) {
+            const message = document.createElement("div");
+            message.className = `message ${sender}`;
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.textContent = sender === "bot" ? "🤖" : "🧑";
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+
+            const formatted = text.replace(/\n/g, "<br>");
+            bubble.innerHTML = formatted;
+
+            message.appendChild(avatar);
+            message.appendChild(bubble);
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function fillSuggestion(text) {
+            userInput.value = text;
+            userInput.focus();
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage("user", message);
+            userInput.value = "";
+            sendBtn.disabled = true;
+            sendBtn.textContent = "Enviant...";
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                addMessage("bot", data.response);
+            } catch (error) {
+                addMessage("bot", "Hi ha hagut un problema connectant amb el servidor.");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = "Enviar";
+                userInput.focus();
+            }
+        }
+
+        async function resetChat() {
+            try {
+                await fetch("/reset", {
+                    method: "POST"
+                });
+
+                chatBox.innerHTML = `
+                    <div class="message bot">
+                        <div class="avatar">🤖</div>
+                        <div class="bubble">
+                            Conversació reiniciada. Digues-me què et ve de gust jugar ara.
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                addMessage("bot", "No s'ha pogut reiniciar la conversa.");
+            }
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            sendMessage();
+        }
+
+        userInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
