@@ -1,10 +1,14 @@
-from flask import *
-from main import RuleBasedGameChatbot
+from flask import Flask, render_template, request, jsonify, session
+from main import RawgGameChatbot
+import os
+from dotenv import load_dotenv
+import uuid
+
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "sbc_practica_secret_key"
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "sbc_practica_secret")
 
-# Guardarem un bot per sessió de manera simple
 bots = {}
 
 
@@ -12,12 +16,11 @@ def get_bot():
     session_id = session.get("session_id")
 
     if not session_id:
-        import uuid
         session_id = str(uuid.uuid4())
         session["session_id"] = session_id
 
     if session_id not in bots:
-        bots[session_id] = RuleBasedGameChatbot()
+        bots[session_id] = RawgGameChatbot()
 
     return bots[session_id]
 
@@ -33,7 +36,7 @@ def chat():
     message = data.get("message", "").strip()
 
     if not message:
-        return jsonify({"response": "Escriu un missatge per començar."})
+        return jsonify({"response": "Escribe un mensaje para empezar."})
 
     bot = get_bot()
     response = bot.respond(message)
@@ -44,7 +47,7 @@ def chat():
 def reset():
     bot = get_bot()
     bot.reset()
-    return jsonify({"response": "Conversació reiniciada. Què et ve de gust jugar ara?"})
+    return jsonify({"response": "Conversación reiniciada. ¿Qué juego quieres buscar ahora?"})
 
 
 if __name__ == "__main__":
