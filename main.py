@@ -27,24 +27,27 @@ class RawgGameChatbot:
         self.steam = SteamService()
         self.steam_library_manager = SteamLibraryManager(self.steam, self.rawg)
         self.extractor = FilterExtractor(self.rawg)
-        self.facts = set()
-        self.reset()
 
-        # Cargar tu base de conocimiento antigua
+        self.facts = set()
+
         with open("reglas.json", "r", encoding="utf-8") as file:
             rules_data = json.load(file)
-            self.rules = [{"conditions": set(r["conditions"]), "conclusions": set(r["conclusions"])} for r in
-                          rules_data["rules"]]
+            self.rules = [
+                {
+                    "conditions": set(r["conditions"]),
+                    "conclusions": set(r["conclusions"])
+                }
+                for r in rules_data["rules"]
+            ]
             self.keyword_map = rules_data["keyword_map"]
 
-        # TRADUCTOR: De tus perfiles a etiquetas de RAWG
         self.profile_to_rawg = {
             "perfil_chill_solitario": {"genres": "indie,casual", "tags": "singleplayer,relaxing"},
             "perfil_narrativo": {"genres": "adventure,rpg", "tags": "story-rich,singleplayer"},
             "perfil_competitivo_online": {"genres": "action,shooter", "tags": "multiplayer,competitive"},
             "perfil_coop_relajado": {"genres": "indie,casual", "tags": "co-op,multiplayer,relaxing"},
             "perfil_terror_grupo": {"genres": "action,indie", "tags": "horror,co-op,multiplayer"},
-            "perfil_estrategia_corta": {"genres": "strategy,board-games", "tags": "turn-based,fast-paced"},
+            "perfil_estrategia_corta": {"genres": "strategy", "tags": "turn-based"},
             "perfil_accion_dificil": {"genres": "action", "tags": "difficult,souls-like"},
             "perfil_exploracion_solo": {"genres": "adventure", "tags": "open-world,singleplayer"},
             "perfil_terror_solo": {"genres": "action,adventure", "tags": "horror,singleplayer"},
@@ -58,8 +61,9 @@ class RawgGameChatbot:
             "perfil_estrategia_chill": {"genres": "strategy,casual", "tags": "relaxing,singleplayer"},
             "perfil_estrategia_multi_rapida": {"genres": "strategy", "tags": "multiplayer,fast-paced"},
             "perfil_estrategia_multi_larga": {"genres": "strategy", "tags": "multiplayer,turn-based"},
-            "perfil_accion_chill_multi": {"genres": "action,casual", "tags": "multiplayer,relaxing"}
+            "perfil_accion_chill_multi": {"genres": "action,casual", "tags": "multiplayer,relaxing"},
         }
+
         self.reset()
 
         # --- RECUPERAMOS TUS FUNCIONES DEL SISTEMA EXPERTO ---

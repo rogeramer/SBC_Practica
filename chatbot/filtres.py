@@ -52,7 +52,6 @@ class FilterExtractor:
             "singleplayer": "singleplayer",
             "solo": "singleplayer",
             "terror": "horror",
-            "por": "horror",
             "historia": "story-rich",
             "historia rica": "story-rich",
             "relajante": "relaxing",
