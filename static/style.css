@@ -25,7 +25,8 @@ body {
         radial-gradient(circle at top left, rgba(124, 92, 255, 0.25), transparent 35%),
         radial-gradient(circle at bottom right, rgba(51, 209, 255, 0.18), transparent 30%),
         linear-gradient(135deg, #070b16 0%, #0c1224 45%, #11182c 100%);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .background-glow {

@@ -1,7 +1,11 @@
 INTENT_KEYWORDS = {
     "greeting": ["hola", "buenas", "hey", "hello", "hi"],
     "farewell": ["adios", "adeu", "hasta luego", "bye", "salir", "sortir"],
-    "details": ["detalle", "detalles", "info", "informacion", "información", "ficha", "mas info", "más info"],
+    "details": ["detalle", "detalles", "info", "informacion", "información",
+        "ficha", "mas info", "más info",
+        "explica", "explicame", "como jugar", "como juego",
+        "guia", "consejos", "como empezar"
+    ],
     "genres": ["generos", "géneros", "tipos", "categorias", "categorías"],
     "platforms": ["plataformas", "consolas", "sistemas"],
     "reset": ["reset", "reiniciar", "empezar de nuevo", "comencem de nou"],

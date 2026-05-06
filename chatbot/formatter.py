@@ -94,24 +94,11 @@ def format_game_card(game, index=None):
 
 
 def format_game_list(games, context):
-    detected_genres = ", ".join(context["genres"]) if context["genres"] else "sin filtro"
-    detected_tags = ", ".join(context["tags"]) if context["tags"] else "sin tags"
-    detected_platforms = ", ".join(str(p) for p in context["platforms"]) if context["platforms"] else "sin plataforma"
-
-    intro = (
-        f"He encontrado estos juegos.\n"
-        f"Filtros actuales: géneros={detected_genres}, tags={detected_tags}, plataformas={detected_platforms}, orden={context['ordering']}.\n\n"
-    )
-
+    intro = "Lo tengo! Basado en lo que me has contado, te recomiendo estos juegos:\n\n"
     cards = "\n\n".join(format_game_card(game, i + 1) for i, game in enumerate(games))
 
-    outro = (
-        "\n\nPuedes decirme:\n"
-        "• detalles del 1\n"
-        "• detalles del 2\n"
-        "• juegos de estrategia para pc\n"
-        "• top rpg"
-    )
+    # Un final mucho más limpio y natural
+    outro = "\n\n¿Quieres que te explique de qué trata alguno?"
 
     return intro + cards + outro
 

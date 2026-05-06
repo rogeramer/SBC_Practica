@@ -1,7 +1,7 @@
 import re
 
 
-class Filtres:
+class FilterExtractor:
     def __init__(self, rawg_service):
         self.rawg = rawg_service
 
@@ -117,17 +117,11 @@ class Filtres:
 
     def extract_search_candidate(self, text):
         cleanup_patterns = [
-            r"\bdetalles?\b",
-            r"\binfo\b",
-            r"\binformacion\b",
-            r"\binformación\b",
-            r"\bficha\b",
-            r"\bdel\b",
-            r"\bde\b",
-            r"\bel\b",
-            r"\bla\b",
-            r"\bgame\b",
-            r"\bjuego\b",
+            r"\bdetalles?\b", r"\binfo\b", r"\binformacion\b", r"\binformación\b",
+            r"\bficha\b", r"\bdel\b", r"\bde\b", r"\bel\b", r"\bla\b", r"\bgame\b", r"\bjuego\b",
+            # --- AÑADIMOS ESTO PARA LIMPIAR CONVERSACIÓN ---
+            r"\bexplica\b", r"\bexplicame\b", r"\bexplícame\b", r"\bcomo\b", r"\bjugar\b",
+            r"\bsobre\b", r"\bquiero\b", r"\bsaber\b", r"\bal\b"
         ]
 
         candidate = text
