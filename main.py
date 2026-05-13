@@ -40,6 +40,7 @@ class RawgGameChatbot:
                 for r in rules_data["rules"]
             ]
             self.keyword_map = rules_data["keyword_map"]
+            self.guides = rules_data["guides"]
 
         self.profile_to_rawg = {
             "perfil_chill_solitario": {"genres": "indie,casual", "tags": "singleplayer,relaxing"},
@@ -435,7 +436,29 @@ class RawgGameChatbot:
                           "• recomiendame algo de mi biblioteca\n"
                           "• un rpg de mi biblioteca"
                 )
+            if intent == "guide":
 
+                candidate = self.extractor.extract_search_candidate(clean_text)
+
+                if not candidate:
+                    return "¿De qué juego quieres una guía?"
+
+                candidate = candidate.lower()
+
+                for game_name, tips in self.guides.items():
+
+                    if game_name in candidate:
+
+                        formatted_tips = "\n".join(
+                            [f"• {tip}" for tip in tips]
+                        )
+
+                        return (
+                            f"🎮 Guía básica de {game_name.title()}:\n\n"
+                            f"{formatted_tips}"
+                        )
+
+                return f"No tengo guía para {candidate}."
             if intent == "details":
                 result = self._details_from_index(clean_text)
                 if result:

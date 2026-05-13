@@ -104,7 +104,7 @@
     "farewell": ["adios", "hasta luego", "salir", "bye", "chao", "chau", "nos vemos", "hasta pronto", "me voy", "adeu", "dew"],
     "greeting": ["hola", "buenas", "hey", "que tal", "buenos dias", "buenas tardes", "buenas noches", "saludos", "ep", "bon dia", "bona tarda", "bona nit"],
     "thanks": ["gracias", "perfecto", "genial", "guay", "me sirve", "estupendo", "muy bien", "mil gracias", "te lo agradezco", "ok", "de acuerdo", "top", "gracies", "merci", "mersi", "perfecte", "perf", "t'ho agraeïxo"],
-    "guide": ["como empezar", "ayudame con", "consejos", "como juego", "como jugar", "explica", "guia", "enseña", "consells", "enseñame"],
+    "guide": ["como empezar", "ayudame con", "consejos", "como juego", "como jugar", "explica", "guia", "enseña", "consells", "enseñame","guía","dona'm una guia","dame una guia","enseña", "tutorial","tips"],
     "recommend": ["recomienda", "quiero jugar", "busco", "que juego", "que me recomiendas", "recomana", "vull jugar", "suggereix", "que puc jugar", "recomana'm", "sugiere", "sugiere-me"],
     "reset": ["otro", "empezar de nuevo", "reset", "borrar", "cambiar"]
   }
