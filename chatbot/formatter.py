@@ -1,5 +1,11 @@
 import re
+import random
 
+INTRO_MESSAGES = [
+    "Perfecto, creo que estos juegos te pueden gustar:",
+    "Basado en lo que buscas, te recomiendo:",
+    "He encontrado algunos juegos interesantes para ti:",
+]
 def _clean_html(text):
     if not text:
         return ""
@@ -80,7 +86,7 @@ def format_game_card(game, index=None):
     metacritic = game.get("metacritic", "N/A")
     genres = ", ".join(g["name"] for g in game.get("genres", [])[:3]) or "Sin género"
     platforms = ", ".join(
-        p["platform"]["name"] for p in game.get("parent_platforms", [])[:3]
+        p["platform"]["name"] for p in game.get("platforms", [])[:5]
     ) or "Sin plataforma"
 
     return (
@@ -94,13 +100,13 @@ def format_game_card(game, index=None):
 
 
 def format_game_list(games, context):
-    intro = "Lo tengo! Basado en lo que me has contado, te recomiendo estos juegos:\n\n"
+    intro = random.choice(INTRO_MESSAGES)
     cards = "\n\n".join(format_game_card(game, i + 1) for i, game in enumerate(games))
 
     # Un final mucho más limpio y natural
     outro = "\n\n¿Quieres que te explique de qué trata alguno?"
 
-    return intro + cards + outro
+    return intro + "\n\n" + cards + outro
 
 
 def format_game_details(details):
