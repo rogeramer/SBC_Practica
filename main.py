@@ -195,13 +195,13 @@ class RawgGameChatbot:
                 self.user_preferences["platform"] = platform_id
 
         # MULTIPLAYER / SOLO
-        if any(x in text for x in ["multi", "multiplayer", "coop", "co-op"]):
+        if any(x in text for x in ["multi","multiplayer","coop","co-op","amics","amic","multijugador","cooperatiu"]):
             self.user_preferences["mode"] = "multiplayer"
             if "multiplayer" not in self.context["tags"]:
                 self.context["tags"].append("multiplayer")
             self.facts.add("multi")
 
-        if any(x in text for x in ["solo", "singleplayer", "single"]):
+        if any(x in text for x in ["sol","solo", "singleplayer", "single"]):
             self.user_preferences["mode"] = "singleplayer"
             if "singleplayer" not in self.context["tags"]:
                 self.context["tags"].append("singleplayer")

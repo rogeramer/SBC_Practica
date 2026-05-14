@@ -16,8 +16,17 @@ INTENT_KEYWORDS = {
 }
 
 
+import re
+
 def detect_intent(text: str) -> str:
+    text = text.lower()
+
     for intent, keywords in INTENT_KEYWORDS.items():
-        if any(keyword in text for keyword in keywords):
+
+        if any(
+            re.search(rf"\b{re.escape(keyword)}\b", text)
+            for keyword in keywords
+        ):
             return intent
+
     return "search"
