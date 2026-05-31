@@ -33,6 +33,7 @@ class SteamLibraryManager:
     def _find_matching_steam_game(self, rawg_name, steam_library_map):
         normalized_rawg_name = self.normalize_name(rawg_name)
 
+        # Coincidencia exacta tras normalización
         if normalized_rawg_name in steam_library_map:
             return steam_library_map[normalized_rawg_name]
 
@@ -40,16 +41,59 @@ class SteamLibraryManager:
         best_score = 0
 
         for steam_name, steam_game in steam_library_map.items():
-            score = SequenceMatcher(None, normalized_rawg_name, steam_name).ratio()
+
+            # Evitar falsos positivos por secuelas o números romanos
+            if not self._numbers_are_compatible(
+                    normalized_rawg_name,
+                    steam_name
+            ):
+                continue
+
+            score = SequenceMatcher(
+                None,
+                normalized_rawg_name,
+                steam_name
+            ).ratio()
 
             if score > best_score:
                 best_score = score
                 best_match = steam_game
 
-        if best_score >= 0.82:
+        if best_score >= 0.88:
             return best_match
 
         return None
+    
+    def _extract_numbers(self, name):
+        """
+        Extrae números normales y romanos relevantes del nombre.
+        """
+        roman_numerals = {
+            "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"
+        }
+
+        tokens = set(self.normalize_name(name).split())
+
+        numeric_tokens = {
+            token for token in tokens
+            if token.isdigit() or token in roman_numerals
+        }
+
+        return numeric_tokens
+
+    def _numbers_are_compatible(self, rawg_name, steam_name):
+        """
+        Evita asociar juegos distintos de una misma saga:
+        Elder Scrolls V != Elder Scrolls VI
+        Fallout 3 != Fallout 4
+        """
+        rawg_numbers = self._extract_numbers(rawg_name)
+        steam_numbers = self._extract_numbers(steam_name)
+
+        if rawg_numbers and steam_numbers:
+            return rawg_numbers == steam_numbers
+
+        return True
 
     def filter_owned_games_from_rawg_results(self, rawg_games, steam_library_map):
         if not steam_library_map:

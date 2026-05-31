@@ -68,6 +68,19 @@ class FilterExtractor:
             "sandbox": "sandbox",
         }
 
+        self.genre_aliases = {
+            "rpg": "role-playing-games-rpg",
+            "rol": "role-playing-games-rpg",
+            "accion": "action",
+            "aventura": "adventure",
+            "estrategia": "strategy",
+            "simulacion": "simulation",
+            "puzzle": "puzzle",
+            "deportes": "sports",
+            "carreras": "racing",
+            "shooter": "shooter",
+        }
+
     def preprocess_text(self, text):
         text = text.lower()
         replacements = {
@@ -144,6 +157,10 @@ class FilterExtractor:
                 if slug not in genres:
                     genres.append(slug)
 
+        for alias, slug in self.genre_aliases.items():
+            if re.search(rf"\b{re.escape(alias)}\b", text) and slug not in genres:
+                genres.append(slug)
+                
         for key, item in self.tag_lookup.items():
             if key and re.search(rf"\b{re.escape(key)}\b", text):
                 slug = item["slug"]

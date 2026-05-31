@@ -1,3 +1,4 @@
+import re
 INTENT_KEYWORDS = {
     "greeting": ["hola", "buenas", "hey", "hello", "hi"],
     "farewell": ["adios", "adeu", "hasta luego", "bye", "salir", "sortir"],
@@ -13,21 +14,48 @@ INTENT_KEYWORDS = {
     "platforms": ["plataformas", "consolas", "sistemas"],
     "reset": ["reset", "reiniciar", "empezar de nuevo", "comencem de nou"],
     "help": ["ayuda", "help", "que puedes hacer", "qué puedes hacer", "comandos"],
-    "most_played": ["juego mas jugado", "juego más jugado", "mas jugado", "más jugado", "he jugado mas", "he jugado más","mi juego favorito",],
+    "most_played": ["juego mas jugado", "juego más jugado", "mas jugado", "más jugado", "he jugado mas",
+                    "he jugado más", "mi juego favorito", ],
+
+    "top_games": [
+        # Español
+        "mas vendidos",
+        "más vendidos",
+        "mas populares",
+        "más populares",
+        "top juegos",
+        "juegos populares",
+        "juegos movil",
+        "juegos móvil",
+
+        # Català
+        "mes venuts",
+        "més venuts",
+        "mes populars",
+        "més populars",
+        "top jocs",
+        "jocs populars",
+        "jocs mobil",
+        "jocs mòbil",
+
+        # English
+        "best selling",
+        "best sellers",
+        "most popular",
+        "top games",
+        "popular games",
+        "mobile games",
+        "best mobile games"
+    ]
 }
-
-
-import re
 
 def detect_intent(text: str) -> str:
     text = text.lower()
 
     for intent, keywords in INTENT_KEYWORDS.items():
-
-        if any(
-            re.search(rf"\b{re.escape(keyword)}\b", text)
-            for keyword in keywords
-        ):
+        if any(keyword in text for keyword in keywords):
             return intent
 
     return "search"
+
+

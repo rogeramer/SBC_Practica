@@ -44,7 +44,10 @@ class RawgGameChatbot:
 
         self.profile_to_rawg = {
             "perfil_chill_solitario": {"genres": "indie,casual", "tags": "singleplayer,relaxing"},
-            "perfil_narrativo": {"genres": "adventure,rpg", "tags": "story-rich,singleplayer"},
+            "perfil_narrativo": {
+                "genres": "adventure,role-playing-games-rpg",
+                "tags": "story-rich,singleplayer"
+            },
             "perfil_competitivo_online": {"genres": "action,shooter", "tags": "multiplayer,competitive"},
             "perfil_coop_relajado": {"genres": "indie,casual", "tags": "co-op,multiplayer,relaxing"},
             "perfil_terror_grupo": {"genres": "action,indie", "tags": "horror,co-op,multiplayer"},
@@ -55,7 +58,10 @@ class RawgGameChatbot:
             "perfil_accion_rapida": {"genres": "action,indie", "tags": "fast-paced,roguelike"},
             "perfil_exploracion_coop": {"genres": "adventure", "tags": "open-world,co-op"},
             "perfil_shooter_coop": {"genres": "shooter", "tags": "co-op"},
-            "perfil_coop_historia": {"genres": "adventure,rpg", "tags": "co-op,story-rich"},
+            "perfil_coop_historia": {
+                "genres": "adventure,role-playing-games-rpg",
+                "tags": "co-op,story-rich"
+            },
             "perfil_estrategia_multi": {"genres": "strategy", "tags": "multiplayer"},
             "perfil_terror_rapido": {"genres": "action", "tags": "horror,fast-paced"},
             "perfil_accion_multi_rapido": {"genres": "action", "tags": "multiplayer,fast-paced"},
@@ -136,6 +142,7 @@ class RawgGameChatbot:
             "mood": None,
             "genre": None,
         }
+
         self.context = {
             "search": None,
             "genres": [],
@@ -151,6 +158,7 @@ class RawgGameChatbot:
             "steam_library": [],
             "steam_library_map": {},
             "steam_recommendation_mode": False,
+            "steam_guided_mode": False,
         }
 
     def _update_context(self, filters):
@@ -195,6 +203,26 @@ class RawgGameChatbot:
             if keyword in text:
                 self.user_preferences["platform"] = platform_id
 
+        if re.search(r"\b(rpg|rol)\b", text):
+            self.user_preferences["genre"] = "role-playing-games-rpg"
+
+            if "role-playing-games-rpg" not in self.context["genres"]:
+                self.context["genres"].append("role-playing-games-rpg")
+
+        if any(x in text for x in ["estrategia", "strategy"]):
+            self.user_preferences["genre"] = "strategy"
+
+            if "strategy" not in self.context["genres"]:
+                self.context["genres"].append("strategy")
+
+            self.facts.add("estrategia")
+
+        if any(x in text for x in ["aventura", "adventure"]):
+            self.user_preferences["genre"] = "adventure"
+
+            if "adventure" not in self.context["genres"]:
+                self.context["genres"].append("adventure")
+
         # MULTIPLAYER / SOLO
         if any(x in text for x in ["multi","multiplayer","coop","co-op","amics","amic","multijugador","cooperatiu"]):
             self.user_preferences["mode"] = "multiplayer"
@@ -202,7 +230,7 @@ class RawgGameChatbot:
                 self.context["tags"].append("multiplayer")
             self.facts.add("multi")
 
-        if any(x in text for x in ["sol","solo", "singleplayer", "single"]):
+        if any(x in text for x in ["solo", "singleplayer", "single"]):
             self.user_preferences["mode"] = "singleplayer"
             if "singleplayer" not in self.context["tags"]:
                 self.context["tags"].append("singleplayer")
@@ -309,22 +337,36 @@ class RawgGameChatbot:
                 "Si no puedo leerla, te avisaré de que puede no ser pública."
             )
 
-        # Mantener activo el flujo Steam entre varios mensajes
         self.context["steam_recommendation_mode"] = True
 
+        # Guardamos preferencias detectadas en lenguaje natural
         self._save_preferences(clean_text)
 
-        next_question = self._conversation_flow()
-        if next_question:
-            return next_question
-
+        # Extraemos filtros RAWG antes de iniciar el cuestionario
         filters = self.extractor.extract_filters(clean_text)
-
-        # Evitar búsquedas literales como "recomiendame algo de mi biblioteca"
         filters["search"] = None
-        self.context["search"] = None
 
+        self.context["search"] = None
         self._update_context(filters)
+
+        has_explicit_filters = bool(
+            self.context["genres"]
+            or self.context["tags"]
+            or self.user_preferences["genre"]
+        )
+
+        # Solo iniciamos el cuestionario si el usuario no ha especificado
+        # qué tipo de juego quiere.
+        if not has_explicit_filters:
+            self.context["steam_guided_mode"] = True
+
+        if self.context["steam_guided_mode"]:
+            next_question = self._conversation_flow()
+
+            if next_question:
+                return next_question
+
+            self.context["steam_guided_mode"] = False
 
         rawg_result = self._search_games_rawg(page_size=100)
 
@@ -336,6 +378,8 @@ class RawgGameChatbot:
         )
 
         self.context["last_results"] = owned_games
+        self.context["steam_recommendation_mode"] = False
+        self.context["steam_guided_mode"] = False
 
         return self.steam_library_manager.format_library_recommendations(
             owned_games
@@ -357,18 +401,16 @@ class RawgGameChatbot:
         details = self.rawg.get_game_details(game["slug"])
         self.context["last_game_slug"] = details.get("slug")
         return format_game_details(details)
+
     def _conversation_flow(self):
-
-        if not self.user_preferences["platform"]:
-            return "¿En qué plataforma quieres jugar? PC, Android, PlayStation..."
-
         if not self.user_preferences["mode"]:
-            return "¿Prefieres jugar solo o multijugador?"
+            return "¿Prefieres jugar solo o en multijugador?"
 
         if not self.user_preferences["mood"]:
             return "¿Buscas algo relajado, competitivo o difícil?"
 
         return None
+
     def _details_from_name(self, text):
         candidate = self.extractor.extract_search_candidate(text)
         if not candidate:
@@ -419,6 +461,8 @@ class RawgGameChatbot:
         self.context["platforms"] = []
         self.context["dates"] = None
         self.context["metacritic"] = None
+        self.context["steam_recommendation_mode"] = False
+        self.context["steam_guided_mode"] = False
 
         self.facts.clear()
 
@@ -457,7 +501,11 @@ class RawgGameChatbot:
                     )
 
                 if self._is_library_query(clean_text):
-                    recommendation_message = self._recommend_from_steam_library(clean_text)
+                    self._clear_recommendation_preferences()
+
+                    recommendation_message = self._recommend_from_steam_library(
+                        clean_text
+                    )
 
                     return (
                         f"{load_message}\n\n"
@@ -560,9 +608,7 @@ class RawgGameChatbot:
 
             # Consultas sobre biblioteca de Steam
             if self._is_library_query(clean_text):
-                if not self.context["steam_recommendation_mode"]:
-                    self._clear_recommendation_preferences()
-
+                self._clear_recommendation_preferences()
                 return self._recommend_from_steam_library(clean_text)
 
             if self.context["steam_recommendation_mode"]:

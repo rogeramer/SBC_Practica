@@ -78,32 +78,62 @@ def format_platforms_list(platforms):
     )
 
 
-def format_game_card(game, index=None):
+def format_game_card(game, context=None, index=None):
+
     number = f"{index}. " if index is not None else ""
+
     name = game.get("name", "Sin nombre")
     released = game.get("released") or "Desconocido"
     rating = game.get("rating", "N/A")
     metacritic = game.get("metacritic", "N/A")
-    genres = ", ".join(g["name"] for g in game.get("genres", [])[:3]) or "Sin género"
-    platforms = ", ".join(
-        p["platform"]["name"] for p in game.get("platforms", [])[:5]
-    ) or "Sin plataforma"
+
+    genres = ", ".join(
+        g["name"]
+        for g in game.get("genres", [])[:3]
+    ) or "Sin género"
+
+    selected_platforms = context.get("platforms", []) if context else []
+
+    if selected_platforms == [21]:
+        platforms = "Móvil"
+
+    elif selected_platforms == [4]:
+        platforms = "PC"
+
+    elif selected_platforms == [187]:
+        platforms = "PlayStation"
+
+    elif selected_platforms == [1]:
+        platforms = "Xbox"
+
+    elif selected_platforms == [7]:
+        platforms = "Nintendo Switch"
+
+    else:
+        platforms = ", ".join(
+            p["platform"]["name"]
+            for p in game.get("platforms", [])[:5]
+        ) or "Sin plataforma"
 
     return (
         f"{number}🎮 {name}\n"
-        f"   • Lanzamiento: {released}\n"
-        f"   • Rating RAWG: {rating}\n"
-        f"   • Metacritic: {metacritic}\n"
-        f"   • Géneros: {genres}\n"
-        f"   • Plataformas: {platforms}"
+        f"• Lanzamiento: {released}\n"
+        f"• Rating RAWG: {rating}\n"
+        f"• Metacritic: {metacritic}\n"
+        f"• Géneros: {genres}\n"
+        f"• Plataformas: {platforms}"
     )
 
 
 def format_game_list(games, context):
-    intro = random.choice(INTRO_MESSAGES)
-    cards = "\n\n".join(format_game_card(game, i + 1) for i, game in enumerate(games))
 
-    # Un final mucho más limpio y natural
+    intro = random.choice(INTRO_MESSAGES)
+
+    cards = "\n\n".join(
+        format_game_card(game, context, i + 1)
+        for i, game in enumerate(games)
+    )
+
     outro = "\n\n¿Quieres que te explique de qué trata alguno?"
 
     return intro + "\n\n" + cards + outro
