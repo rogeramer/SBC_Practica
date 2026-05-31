@@ -150,6 +150,7 @@ class RawgGameChatbot:
             "steam_library_loaded": False,
             "steam_library": [],
             "steam_library_map": {},
+            "steam_recommendation_mode": False,
         }
 
     def _update_context(self, filters):
@@ -307,16 +308,25 @@ class RawgGameChatbot:
                 "• cargar steam 7656119XXXXXXXXXX\n\n"
                 "Si no puedo leerla, te avisaré de que puede no ser pública."
             )
+
+        # Mantener activo el flujo Steam entre varios mensajes
+        self.context["steam_recommendation_mode"] = True
+
         self._save_preferences(clean_text)
+
         next_question = self._conversation_flow()
         if next_question:
             return next_question
 
         filters = self.extractor.extract_filters(clean_text)
+
+        # Evitar búsquedas literales como "recomiendame algo de mi biblioteca"
         filters["search"] = None
+        self.context["search"] = None
+
         self._update_context(filters)
 
-        rawg_result = self._search_games_rawg(page_size=20)
+        rawg_result = self._search_games_rawg(page_size=100)
 
         owned_games = self.steam_library_manager.recommend_from_library(
             rawg_result,
@@ -326,7 +336,10 @@ class RawgGameChatbot:
         )
 
         self.context["last_results"] = owned_games
-        return self.steam_library_manager.format_library_recommendations(owned_games)
+
+        return self.steam_library_manager.format_library_recommendations(
+            owned_games
+        )
 
     def _details_from_index(self, text):
         index = self.extractor.extract_index_reference(text)
@@ -392,6 +405,24 @@ class RawgGameChatbot:
         self.context["last_game_slug"] = details.get("slug")
         return format_game_details(details)
 
+    def _clear_recommendation_preferences(self):
+        self.user_preferences = {
+            "platform": None,
+            "mode": None,
+            "mood": None,
+            "genre": None,
+        }
+
+        self.context["search"] = None
+        self.context["genres"] = []
+        self.context["tags"] = []
+        self.context["platforms"] = []
+        self.context["dates"] = None
+        self.context["metacritic"] = None
+
+        self.facts.clear()
+
+
     def respond(self, user_input):
         try:
             clean_text = self.extractor.preprocess_text(user_input)
@@ -423,6 +454,14 @@ class RawgGameChatbot:
                         f"🎮 Tu juego más jugado es:\n\n"
                         f"{game['name']}\n"
                         f"Horas jugadas: {hours}"
+                    )
+
+                if self._is_library_query(clean_text):
+                    recommendation_message = self._recommend_from_steam_library(clean_text)
+
+                    return (
+                        f"{load_message}\n\n"
+                        f"{recommendation_message}"
                     )
 
                 return load_message
@@ -521,7 +560,14 @@ class RawgGameChatbot:
 
             # Consultas sobre biblioteca de Steam
             if self._is_library_query(clean_text):
+                if not self.context["steam_recommendation_mode"]:
+                    self._clear_recommendation_preferences()
+
                 return self._recommend_from_steam_library(clean_text)
+
+            if self.context["steam_recommendation_mode"]:
+                return self._recommend_from_steam_library(clean_text)
+
             self._save_preferences(clean_text)
 
             next_question = self._conversation_flow()
