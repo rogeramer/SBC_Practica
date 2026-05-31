@@ -11,7 +11,6 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "sbc_practica_secret")
 
 bots = {}
 
-
 def get_bot():
     session_id = session.get("session_id")
 

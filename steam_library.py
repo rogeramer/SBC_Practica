@@ -1,53 +1,78 @@
+import re
+from difflib import SequenceMatcher
+
+
 class SteamLibraryManager:
     def __init__(self, steam_service, rawg_service):
         self.steam = steam_service
         self.rawg = rawg_service
 
     def load_library(self, steamid: str):
-        """
-        Carga la biblioteca de Steam y devuelve un resultado normalizado.
-        """
         return self.steam.get_owned_games(steamid)
 
+    def normalize_name(self, name):
+        name = (name or "").lower()
+        name = name.replace("®", "").replace("™", "")
+        name = name.replace(":", " ").replace("-", " ")
+        name = re.sub(r"\([^)]*\)", " ", name)
+        name = re.sub(r"[^a-z0-9\s]", " ", name)
+        name = re.sub(r"\s+", " ", name).strip()
+        return name
+
     def build_library_map(self, steam_games):
-        """
-        Convierte la lista de juegos de Steam en un diccionario por nombre en minúsculas.
-        """
         library_map = {}
+
         for game in steam_games:
-            name = (game.get("name") or "").strip().lower()
-            if name:
-                library_map[name] = game
+            normalized_name = self.normalize_name(game.get("name"))
+
+            if normalized_name:
+                library_map[normalized_name] = game
+
         return library_map
 
+    def _find_matching_steam_game(self, rawg_name, steam_library_map):
+        normalized_rawg_name = self.normalize_name(rawg_name)
+
+        if normalized_rawg_name in steam_library_map:
+            return steam_library_map[normalized_rawg_name]
+
+        best_match = None
+        best_score = 0
+
+        for steam_name, steam_game in steam_library_map.items():
+            score = SequenceMatcher(None, normalized_rawg_name, steam_name).ratio()
+
+            if score > best_score:
+                best_score = score
+                best_match = steam_game
+
+        if best_score >= 0.82:
+            return best_match
+
+        return None
+
     def filter_owned_games_from_rawg_results(self, rawg_games, steam_library_map):
-        """
-        De una lista de resultados de RAWG, devuelve solo los que existen en la biblioteca de Steam.
-        El cruce se hace por nombre.
-        """
         if not steam_library_map:
             return []
 
         owned_results = []
 
         for game in rawg_games:
-            rawg_name = (game.get("name") or "").strip().lower()
-            if rawg_name in steam_library_map:
-                steam_game = steam_library_map[rawg_name]
+            steam_game = self._find_matching_steam_game(
+                game.get("name", ""),
+                steam_library_map
+            )
 
+            if steam_game:
                 merged = dict(game)
                 merged["steam_playtime_forever"] = steam_game.get("playtime_forever", 0)
                 merged["steam_appid"] = steam_game.get("appid")
                 merged["steam_rtime_last_played"] = steam_game.get("rtime_last_played", 0)
-
                 owned_results.append(merged)
 
         return owned_results
 
     def recommend_from_library(self, rawg_result, steam_library_map, limit=5, prioritize_less_played=True):
-        """
-        Cruza resultados RAWG con la biblioteca Steam y devuelve recomendaciones.
-        """
         rawg_games = rawg_result.get("results", [])
         owned_games = self.filter_owned_games_from_rawg_results(rawg_games, steam_library_map)
 
@@ -60,10 +85,11 @@ class SteamLibraryManager:
         if not games:
             return (
                 "No he encontrado coincidencias dentro de tu biblioteca de Steam con esos criterios.\n\n"
-                "Prueba con algo como:\n"
-                "• un rpg de mi biblioteca\n"
-                "• un juego con historia de mi biblioteca\n"
-                "• algo de accion de mi biblioteca"
+                "Puede que RAWG y Steam usen nombres distintos para algunos juegos, o que los filtros sean demasiado concretos.\n\n"
+                "Prueba con algo más general como:\n"
+                "• algo de mi biblioteca\n"
+                "• un juego de accion de mi biblioteca\n"
+                "• un juego relajado de mi biblioteca"
             )
 
         lines = ["He encontrado estos juegos dentro de tu biblioteca de Steam:\n"]
@@ -99,4 +125,14 @@ class SteamLibraryManager:
             f"• recomiendame algo de mi biblioteca\n"
             f"• un rpg de mi biblioteca\n"
             f"• un juego con historia de mi biblioteca"
+        )
+
+    def get_most_played_game(self, steam_games):
+
+        if not steam_games:
+            return None
+
+        return max(
+            steam_games,
+            key=lambda g: g.get("playtime_forever", 0)
         )

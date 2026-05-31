@@ -5,11 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 STEAM_API_KEY = os.getenv("STEAM_API_KEY", "").strip()
-BASE_URL = "https://partner.steam-api.com"
+BASE_URL = "https://api.steampowered.com"
 
 if not STEAM_API_KEY:
-    raise ValueError("Falta STEAM_API_KEY en el archivo .env")
-
+    print("Aviso: Falta STEAM_API_KEY en el archivo .env. Steam no funcionará hasta configurarla.")
 
 class SteamService:
     def __init__(self):

@@ -313,6 +313,7 @@ class RawgGameChatbot:
             return next_question
 
         filters = self.extractor.extract_filters(clean_text)
+        filters["search"] = None
         self._update_context(filters)
 
         rawg_result = self._search_games_rawg(page_size=20)
@@ -399,15 +400,40 @@ class RawgGameChatbot:
             # --- PARTE 1: BLOQUEO DE FUNCIONALIDADES ESPECIALES ---
 
             # Cargar biblioteca de Steam
-            if "cargar steam" in clean_text or "conectar steam" in clean_text or "steamid" in clean_text:
-                steamid = self._extract_steamid(clean_text)
+            steamid = self._extract_steamid(clean_text)
+
+            if steamid and "steam" in clean_text:
+                load_message = self._load_steam_library(steamid)
+
+                if intent == "most_played":
+                    if not self.context["steam_library_loaded"]:
+                        return load_message
+
+                    game = self.steam_library_manager.get_most_played_game(
+                        self.context["steam_library"]
+                    )
+
+                    if not game:
+                        return "No he encontrado juegos en tu biblioteca."
+
+                    hours = round(game["playtime_forever"] / 60, 1)
+
+                    return (
+                        f"{load_message}\n\n"
+                        f"🎮 Tu juego más jugado es:\n\n"
+                        f"{game['name']}\n"
+                        f"Horas jugadas: {hours}"
+                    )
+
+                return load_message
+
+            if "cargar steam" in clean_text or "carga steam" in clean_text or "conectar steam" in clean_text or "steamid" in clean_text:
                 if not steamid:
                     return (
                         "No he encontrado un SteamID64 válido en tu mensaje.\n"
                         "Usa algo como:\n"
                         "• cargar steam 7656119XXXXXXXXXX"
                     )
-                return self._load_steam_library(steamid)
 
             if intent == "greeting":
                 return format_welcome_message()
@@ -459,6 +485,34 @@ class RawgGameChatbot:
                         )
 
                 return f"No tengo guía para {candidate}."
+
+            if intent == "most_played":
+
+                if not self.context["steam_library_loaded"]:
+                    return (
+                        "Primero debes cargar tu biblioteca de Steam.\n"
+                        "Ejemplo:\n"
+                        "cargar steam 7656119XXXXXXXXXX"
+                    )
+
+                game = self.steam_library_manager.get_most_played_game(
+                    self.context["steam_library"]
+                )
+
+                if not game:
+                    return "No he encontrado juegos en tu biblioteca."
+
+                hours = round(
+                    game["playtime_forever"] / 60,
+                    1
+                )
+
+                return (
+                    f"🎮 Tu juego más jugado es:\n\n"
+                    f"{game['name']}\n"
+                    f"Horas jugadas: {hours}"
+                )
+
             if intent == "details":
                 result = self._details_from_index(clean_text)
                 if result:

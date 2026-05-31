@@ -13,6 +13,7 @@ INTENT_KEYWORDS = {
     "platforms": ["plataformas", "consolas", "sistemas"],
     "reset": ["reset", "reiniciar", "empezar de nuevo", "comencem de nou"],
     "help": ["ayuda", "help", "que puedes hacer", "qué puedes hacer", "comandos"],
+    "most_played": ["juego mas jugado", "juego más jugado", "mas jugado", "más jugado", "he jugado mas", "he jugado más","mi juego favorito",],
 }
 
 
