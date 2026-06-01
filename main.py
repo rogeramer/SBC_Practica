@@ -688,6 +688,23 @@ class RawgGameChatbot:
             self._save_preferences(clean_text)
 
             if not self.has_enough_info():
+
+                if (
+                    not self.user_preferences["platform"]
+                    and not self.user_preferences["mode"]
+                    and not self.user_preferences["mood"]
+                    and not self.user_preferences["genre"]
+                ):
+                    return (
+                        "No he entendido muy bien lo que buscas. 🤔\n\n"
+                        "Prueba con ejemplos como:\n"
+                        "• Quiero un RPG con historia\n"
+                        "• Juegos para móvil\n"
+                        "• Algo competitivo para jugar con amigos\n"
+                        "• Dame una guía de Minecraft\n"
+                        "• Recomiéndame algo de mi biblioteca"
+                    )
+
                 return self.ask_for_missing_info()
             # --- PARTE 2: LÓGICA DEL SISTEMA EXPERTO ---
 
