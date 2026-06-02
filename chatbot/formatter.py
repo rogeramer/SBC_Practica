@@ -1,28 +1,221 @@
-import re
+import html
 import random
+import re
+
+from chatbot.recommendation_config import (
+    PLATFORM_LABELS,
+)
+
 
 INTRO_MESSAGES = [
     "Perfecto, creo que estos juegos te pueden gustar:",
     "Basado en lo que buscas, te recomiendo:",
     "He encontrado algunos juegos interesantes para ti:",
 ]
+
+
+# =========================================================
+# UTILIDADES GENERALES
+# =========================================================
+
 def _clean_html(text):
+    """
+    Elimina etiquetas HTML y convierte entidades como:
+    &amp; → &
+    """
+
     if not text:
         return ""
-    text = re.sub(r"<[^>]+>", "", text)
+
+    text = html.unescape(
+        str(text)
+    )
+
+    text = re.sub(
+        r"<[^>]+>",
+        "",
+        text,
+    )
+
     return text.strip()
 
+
+def _display_value(value, fallback="No disponible"):
+    """
+    Evita mostrar valores poco claros como:
+    None
+    ""
+    """
+
+    if value is None or value == "":
+        return fallback
+
+    return value
+
+
+def _join_names(items, limit=None):
+    """
+    Extrae nombres de listas RAWG de forma segura.
+    """
+
+    if limit is not None:
+        items = items[:limit]
+
+    names = [
+        item.get("name")
+        for item in items
+        if item.get("name")
+    ]
+
+    return ", ".join(
+        names
+    )
+
+
+def _join_store_names(stores, limit=None):
+    """
+    Extrae nombres de tiendas RAWG de forma segura.
+    """
+
+    if limit is not None:
+        stores = stores[:limit]
+
+    names = []
+
+    for item in stores:
+        store = item.get(
+            "store",
+            {},
+        )
+
+        name = store.get("name")
+
+        if name:
+            names.append(name)
+
+    return ", ".join(
+        names
+    )
+
+
+def _join_game_platform_names(game, limit=5):
+    """
+    Devuelve las plataformas reales disponibles para un juego.
+    """
+
+    names = []
+
+    for item in game.get(
+        "platforms",
+        [],
+    )[:limit]:
+        platform = item.get(
+            "platform",
+            {},
+        )
+
+        name = platform.get("name")
+
+        if name:
+            names.append(name)
+
+    return ", ".join(
+        names
+    )
+
+
+def _format_selected_platforms(context):
+    """
+    Si el usuario ha solicitado una plataforma concreta,
+    devuelve una etiqueta legible.
+
+    Admite tanto:
+    - context["explicit_platforms"]
+    - context["platforms"]
+    """
+
+    if not context:
+        return ""
+
+    selected_platforms = set(
+        context.get("explicit_platforms")
+        or context.get("platforms")
+        or []
+    )
+
+    if not selected_platforms:
+        return ""
+
+    labels = [
+        PLATFORM_LABELS.get(platform_id)
+        for platform_id in selected_platforms
+        if PLATFORM_LABELS.get(platform_id)
+    ]
+
+    return ", ".join(
+        sorted(labels)
+    )
+
+
+def format_reasons_text(reasons):
+    """
+    Convierte una lista de razones breves en una frase natural.
+
+    Ejemplo:
+    [
+        "pertenece al género RPG",
+        "tiene una historia destacada"
+    ]
+
+    Resultado:
+    "Pertenece al género RPG. Tiene una historia destacada."
+    """
+
+    cleaned_reasons = []
+
+    for reason in reasons:
+        reason = str(
+            reason
+        ).strip()
+
+        if not reason:
+            continue
+
+        reason = (
+            reason[0].upper()
+            + reason[1:]
+        )
+
+        cleaned_reasons.append(
+            reason.rstrip(".")
+        )
+
+    if not cleaned_reasons:
+        return ""
+
+    return ". ".join(
+        cleaned_reasons
+    ) + "."
+
+
+# =========================================================
+# MENSAJES GENERALES
+# =========================================================
 
 def format_welcome_message():
     return (
         "¡Hola! Soy tu chatbot de videojuegos con RAWG.\n\n"
-        "Puedo buscar juegos reales por género, tags, plataformas, rating o nombre.\n\n"
+        "Puedo buscar juegos reales por género, etiquetas, "
+        "plataformas, valoración o nombre.\n\n"
+        "También puedo recomendar juegos de tu biblioteca de Steam "
+        "si cargas un SteamID64 público.\n\n"
         "Ejemplos:\n"
-        "• juegos de accion para pc\n"
-        "• rpg con historia\n"
-        "• indies relajantes para switch\n"
+        "• juegos de acción para PC\n"
+        "• RPG con historia\n"
+        "• indies relajantes para Switch\n"
+        "• recomiéndame un cooperativo local\n"
         "• detalles del 1\n"
-        "• generos\n"
+        "• géneros\n"
         "• plataformas"
     )
 
@@ -30,136 +223,325 @@ def format_welcome_message():
 def format_help_message():
     return (
         "Puedes pedirme cosas como:\n\n"
-        "• juegos de accion para pc\n"
+        "• juegos de acción para PC\n"
         "• survival horror\n"
-        "• rpg para ps5\n"
+        "• RPG para PS5\n"
         "• juegos recientes de 2024\n"
+        "• próximos RPG para PC\n"
+        "• un cooperativo online\n"
         "• detalles del 2\n"
-        "• generos\n"
+        "• géneros\n"
         "• plataformas\n"
-        "• reset"
+        "• reset\n\n"
+        "Steam:\n"
+        "• cargar steam 7656119XXXXXXXXXX\n"
+        "• recomiéndame algo de mi biblioteca\n"
+        "• dime mis juegos más jugados"
     )
 
 
 def format_goodbye_message():
-    return "¡Hasta luego! Cuando quieras vuelvo a buscarte juegos."
+    return (
+        "¡Hasta luego! "
+        "Cuando quieras vuelvo a buscarte juegos."
+    )
 
 
 def format_reset_message():
-    return "Contexto reiniciado. Dime qué tipo de juego quieres buscar."
+    return (
+        "Contexto reiniciado. "
+        "Dime qué tipo de juego quieres buscar."
+    )
 
 
 def format_no_results_message():
     return (
-        "No he encontrado juegos con esos criterios.\n\n"
-        "Prueba con algo como:\n"
-        "• juegos de accion para pc\n"
-        "• rpg con historia\n"
+        "No he encontrado juegos que encajen con esos criterios.\n\n"
+        "Prueba a simplificar la búsqueda. Por ejemplo:\n"
+        "• juegos de acción para PC\n"
+        "• RPG con historia\n"
         "• indies relajantes\n"
-        "• top survival horror"
+        "• cooperativos para jugar con amigos"
     )
 
 
 def format_error_message(error):
-    return f"Ha ocurrido un error al consultar RAWG: {error}"
+    """
+    Mensaje genérico porque el error puede proceder
+    de RAWG, Steam o de otra parte del chatbot.
+    """
 
+    return (
+        "Ha ocurrido un error al procesar la consulta: "
+        f"{error}"
+    )
+
+
+# =========================================================
+# CATÁLOGOS RAWG
+# =========================================================
 
 def format_genres_list(genres):
-    genres = sorted(genres, key=lambda x: x["name"].lower())
-    return "Géneros disponibles:\n\n" + "\n".join(
-        f"• {g['name']} ({g['slug']})" for g in genres
+    genres = sorted(
+        genres,
+        key=lambda item: item.get(
+            "name",
+            "",
+        ).lower(),
+    )
+
+    lines = [
+        f"• {genre.get('name', 'Sin nombre')} "
+        f"({genre.get('slug', 'sin-slug')})"
+        for genre in genres
+    ]
+
+    return (
+        "Géneros disponibles:\n\n"
+        + "\n".join(lines)
     )
 
 
 def format_platforms_list(platforms):
-    platforms = sorted(platforms, key=lambda x: x["name"].lower())
-    return "Plataformas disponibles:\n\n" + "\n".join(
-        f"• {p['name']} (id {p['id']})" for p in platforms
+    platforms = sorted(
+        platforms,
+        key=lambda item: item.get(
+            "name",
+            "",
+        ).lower(),
+    )
+
+    lines = [
+        f"• {platform.get('name', 'Sin nombre')} "
+        f"(id {platform.get('id', 'N/A')})"
+        for platform in platforms
+    ]
+
+    return (
+        "Plataformas disponibles:\n\n"
+        + "\n".join(lines)
     )
 
 
-def format_game_card(game, context=None, index=None):
+# =========================================================
+# RECOMENDACIONES
+# =========================================================
 
-    number = f"{index}. " if index is not None else ""
+def format_game_card(
+    game,
+    context=None,
+    index=None,
+):
+    """
+    Formatea una recomendación individual.
+    """
 
-    name = game.get("name", "Sin nombre")
-    released = game.get("released") or "Desconocido"
-    rating = game.get("rating", "N/A")
-    metacritic = game.get("metacritic", "N/A")
+    number = (
+        f"{index}. "
+        if index is not None
+        else ""
+    )
 
-    genres = ", ".join(
-        g["name"]
-        for g in game.get("genres", [])[:3]
-    ) or "Sin género"
+    name = _display_value(
+        game.get("name"),
+        "Sin nombre",
+    )
 
-    selected_platforms = context.get("platforms", []) if context else []
+    released = _display_value(
+        game.get("released"),
+        "Sin fecha confirmada",
+    )
 
-    if selected_platforms == [21]:
-        platforms = "Móvil"
+    rating = _display_value(
+        game.get("rating"),
+        "No disponible",
+    )
 
-    elif selected_platforms == [4]:
-        platforms = "PC"
+    metacritic = _display_value(
+        game.get("metacritic"),
+        "No disponible",
+    )
 
-    elif selected_platforms == [187]:
-        platforms = "PlayStation"
+    genres = (
+        _join_names(
+            game.get(
+                "genres",
+                [],
+            ),
+            limit=3,
+        )
+        or "Sin género"
+    )
 
-    elif selected_platforms == [1]:
-        platforms = "Xbox"
+    selected_platforms = (
+        _format_selected_platforms(
+            context
+        )
+    )
 
-    elif selected_platforms == [7]:
-        platforms = "Nintendo Switch"
+    if selected_platforms:
+        platforms = selected_platforms
 
     else:
-        platforms = ", ".join(
-            p["platform"]["name"]
-            for p in game.get("platforms", [])[:5]
-        ) or "Sin plataforma"
+        platforms = (
+            _join_game_platform_names(
+                game,
+                limit=5,
+            )
+            or "Sin plataforma"
+        )
+
+    reasons = game.get(
+        "_recommendation_reasons",
+        [],
+    )
+
+    reasons_text = ""
+
+    if reasons:
+        reasons_text = (
+            "\n"
+            "   • Por qué encaja: "
+            f"{format_reasons_text(reasons)}"
+        )
 
     return (
         f"{number}🎮 {name}\n"
-        f"• Lanzamiento: {released}\n"
-        f"• Rating RAWG: {rating}\n"
-        f"• Metacritic: {metacritic}\n"
-        f"• Géneros: {genres}\n"
-        f"• Plataformas: {platforms}"
+        f"   • Lanzamiento: {released}\n"
+        f"   • Rating RAWG: {rating}\n"
+        f"   • Metacritic: {metacritic}\n"
+        f"   • Géneros: {genres}\n"
+        f"   • Plataformas: {platforms}"
+        f"{reasons_text}"
     )
 
 
-def format_game_list(games, context):
+def format_game_list(
+    games,
+    context,
+):
+    """
+    Formatea una lista de recomendaciones.
+    """
 
-    intro = random.choice(INTRO_MESSAGES)
+    if not games:
+        return format_no_results_message()
+
+    intro = random.choice(
+        INTRO_MESSAGES
+    )
 
     cards = "\n\n".join(
-        format_game_card(game, context, i + 1)
-        for i, game in enumerate(games)
+        format_game_card(
+            game,
+            context,
+            index + 1,
+        )
+        for index, game in enumerate(
+            games
+        )
     )
 
-    outro = "\n\n¿Quieres que te explique de qué trata alguno?"
-
-    return intro + "\n\n" + cards + outro
-
-
-def format_game_details(details):
-    genres = ", ".join(g["name"] for g in details.get("genres", [])) or "Sin datos"
-    tags = ", ".join(t["name"] for t in details.get("tags", [])[:8]) or "Sin datos"
-    developers = ", ".join(d["name"] for d in details.get("developers", [])) or "Sin datos"
-    publishers = ", ".join(p["name"] for p in details.get("publishers", [])) or "Sin datos"
-    stores = ", ".join(s["store"]["name"] for s in details.get("stores", [])[:6]) or "Sin datos"
-
-    description = _clean_html(details.get("description_raw") or details.get("description") or "")
-    if len(description) > 900:
-        description = description[:900] + "..."
+    outro = (
+        "\n\n¿Quieres que te explique "
+        "de qué trata alguno?"
+    )
 
     return (
-        f"📘 {details.get('name', 'Juego')}\n\n"
-        f"• Lanzamiento: {details.get('released', 'Desconocido')}\n"
-        f"• Rating RAWG: {details.get('rating', 'N/A')}\n"
-        f"• Metacritic: {details.get('metacritic', 'N/A')}\n"
+        intro
+        + "\n\n"
+        + cards
+        + outro
+    )
+
+
+# =========================================================
+# DETALLES DE UN JUEGO
+# =========================================================
+
+def format_game_details(details):
+    """
+    Formatea la ficha completa obtenida desde RAWG.
+    """
+
+    genres = (
+        _join_names(
+            details.get(
+                "genres",
+                [],
+            )
+        )
+        or "Sin datos"
+    )
+
+    tags = (
+        _join_names(
+            details.get(
+                "tags",
+                [],
+            ),
+            limit=8,
+        )
+        or "Sin datos"
+    )
+
+    developers = (
+        _join_names(
+            details.get(
+                "developers",
+                [],
+            )
+        )
+        or "Sin datos"
+    )
+
+    publishers = (
+        _join_names(
+            details.get(
+                "publishers",
+                [],
+            )
+        )
+        or "Sin datos"
+    )
+
+    stores = (
+        _join_store_names(
+            details.get(
+                "stores",
+                [],
+            ),
+            limit=6,
+        )
+        or "Sin datos"
+    )
+
+    description = _clean_html(
+        details.get("description_raw")
+        or details.get("description")
+        or ""
+    )
+
+    if len(description) > 900:
+        description = (
+            description[:900]
+            + "..."
+        )
+
+    return (
+        f"📘 {_display_value(details.get('name'), 'Juego')}\n\n"
+        f"• Lanzamiento: "
+        f"{_display_value(details.get('released'), 'Sin fecha confirmada')}\n"
+        f"• Rating RAWG: "
+        f"{_display_value(details.get('rating'))}\n"
+        f"• Metacritic: "
+        f"{_display_value(details.get('metacritic'))}\n"
         f"• Géneros: {genres}\n"
         f"• Tags: {tags}\n"
         f"• Desarrolladores: {developers}\n"
         f"• Publishers: {publishers}\n"
         f"• Tiendas: {stores}\n"
-        f"• Web oficial: {details.get('website') or 'No disponible'}\n\n"
+        f"• Web oficial: "
+        f"{_display_value(details.get('website'))}\n\n"
         f"{description or 'Sin descripción disponible.'}"
     )

@@ -78,6 +78,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 18px;
+    overflow-y: auto;
 }
 
 .brand {
@@ -262,8 +263,8 @@ body {
     border-radius: 18px;
     line-height: 1.55;
     font-size: 0.98rem;
-    white-space: normal;
-    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 

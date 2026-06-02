@@ -1,111 +1,493 @@
 {
-  "rules": [
-    {"conditions": ["solo", "relajado"], "conclusions": ["perfil_chill_solitario"]},
-    {"conditions": ["solo", "historia"], "conclusions": ["perfil_narrativo"]},
-    {"conditions": ["multi", "competitivo"], "conclusions": ["perfil_competitivo_online"]},
-    {"conditions": ["multi", "relajado"], "conclusions": ["perfil_coop_relajado"]},
-    {"conditions": ["estrategia", "poco_tiempo"], "conclusions": ["perfil_estrategia_corta"]},
-    {"conditions": ["accion", "dificil"], "conclusions": ["perfil_accion_dificil"]},
-    {"conditions": ["explorar", "solo"], "conclusions": ["perfil_exploracion_solo"]},
-    {"conditions": ["miedo", "multi"], "conclusions": ["perfil_terror_grupo"]},
-    {"conditions": ["miedo", "solo"], "conclusions": ["perfil_terror_solo"]},
-    {"conditions": ["accion", "solo", "poco_tiempo"], "conclusions": ["perfil_accion_rapida"]},
-    {"conditions": ["mucho_tiempo", "solo"], "conclusions": ["perfil_narrativo"]},
-    {"conditions": ["mucho_tiempo", "explorar"], "conclusions": ["perfil_exploracion_coop"]},
-    {"conditions": ["accion", "multi", "competitivo"], "conclusions": ["perfil_shooter_coop"]},
-    {"conditions": ["historia", "multi"], "conclusions": ["perfil_coop_historia"]},
-    {"conditions": ["explorar", "multi"], "conclusions": ["perfil_exploracion_coop"]},
-    {"conditions": ["estrategia", "multi"], "conclusions": ["perfil_estrategia_multi"]},
-    {"conditions": ["miedo", "poco_tiempo"], "conclusions": ["perfil_terror_rapido"]},
-    {"conditions": ["accion", "multi", "poco_tiempo"], "conclusions": ["perfil_accion_multi_rapido"]},
-    {"conditions": ["estrategia", "solo", "relajado"], "conclusions": ["perfil_estrategia_chill"]},
-    {"conditions": ["estrategia", "multi", "poco_tiempo"], "conclusions": ["perfil_estrategia_multi_rapida"]},
-    {"conditions": ["estrategia", "multi", "mucho_tiempo"], "conclusions": ["perfil_estrategia_multi_larga"]},
-    {"conditions": ["accion", "multi", "relajado"], "conclusions": ["perfil_accion_chill_multi"]},
+"rules": [
+{
+"conditions": ["coop"],
+"conclusions": ["multi"]
+},
+{
+"conditions": ["shooter"],
+"conclusions": ["accion"]
+},
 
-    {"conditions": ["perfil_chill_solitario"], "conclusions": ["recomendar_stardew_valley", "recomendar_journey"]},
-    {"conditions": ["perfil_narrativo"], "conclusions": ["recomendar_life_is_strange", "recomendar_the_witcher_3"]},
-    {"conditions": ["perfil_competitivo_online"], "conclusions": ["recomendar_valorant", "recomendar_rocket_league"]},
-    {"conditions": ["perfil_coop_relajado"], "conclusions": ["recomendar_minecraft", "recomendar_overcooked_2"]},
-    {"conditions": ["perfil_estrategia_corta"], "conclusions": ["recomendar_into_the_breach", "recomendar_slay_the_spire"]},
-    {"conditions": ["perfil_accion_dificil"], "conclusions": ["recomendar_hades", "recomendar_dark_souls"]},
-    {"conditions": ["perfil_exploracion_solo"], "conclusions": ["recomendar_minecraft", "recomendar_journey"]},
-    {"conditions": ["perfil_terror_grupo"], "conclusions": ["recomendar_phasmophobia"]},
-    {"conditions": ["perfil_terror_solo"], "conclusions": ["recomendar_resident_evil_2"]},
-    {"conditions": ["perfil_accion_rapida"], "conclusions": ["recomendar_dead_cells", "recomendar_hades"]},
-    {"conditions": ["perfil_shooter_coop"], "conclusions": ["recomendar_apex_legends", "recomendar_left_4_dead_2"]},
-    {"conditions": ["perfil_coop_historia"], "conclusions": ["recomendar_it_takes_two"]},
-    {"conditions": ["perfil_exploracion_coop"], "conclusions": ["recomendar_valheim"]},
-    {"conditions": ["perfil_estrategia_multi"], "conclusions": ["recomendar_civilization_vi"]},
-    {"conditions": ["perfil_terror_rapido"], "conclusions": ["recomendar_five_nights_at_freddys"]},
-    {"conditions": ["perfil_accion_multi_rapido"], "conclusions": ["recomendar_brawl_stars", "recomendar_call_of_duty"]},
-    {"conditions": ["perfil_estrategia_chill"], "conclusions": ["recomendar_solitario"]},
-    {"conditions": ["perfil_estrategia_multi_rapida"], "conclusions": ["recomendar_clash_royale", "recomendar_ajedrez"]},
-    {"conditions": ["perfil_estrategia_multi_larga"], "conclusions": ["recomendar_clash_of_clans"]},
-    {"conditions": ["perfil_accion_chill_multi"], "conclusions": ["recomendar_fall_guys", "recomendar_mario_kart"]}
-  ],
-  "guides": {
-    "stardew valley": ["Planta semillas y riégalas.", "No gastes toda la energía de golpe.", "Habla con el pueblo."],
-    "journey": ["Juega sin prisas.", "La experiencia es más importante que ganar.", "Ideal para relajarse."],
-    "valorant": ["Empieza con agentes sencillos.", "Aprende el mapa.", "Comunícate con tu equipo."],
-    "rocket league": ["Aprende a rotar.", "No persigas la pelota a lo loco.", "Practica disparos básicos."],
-    "life is strange": ["Tómate tiempo para explorar.", "Tus decisiones importan.", "Céntrate en la historia."],
-    "the witcher 3": ["Haz misiones secundarias.", "Usa señales y pociones.", "Consulta el bestiario."],
-    "minecraft": ["Consigue madera y refugio rápido.", "Haz una cama antes de la noche.", "Explora con calma."],
-    "overcooked 2": ["Organiza las tareas.", "La coordinación es vital.", "No corras sin sentido."],
-    "into the breach": ["Minimiza daño.", "Mover enemigos es muy útil.", "Piensa como si fuera ajedrez."],
-    "slay the spire": ["No cojas cartas al azar.", "Quitar cartas malas es bueno.", "Busca sinergias."],
-    "hades": ["Morir es parte del juego.", "Prueba varias armas.", "Mejora en el espejo de la noche."],
-    "dark souls": ["Ve despacio y observa.", "Gestiona la estamina.", "Ten mucha paciencia."],
-    "phasmophobia": ["Empieza en dificultad baja.", "Usa bien los objetos.", "No hables solo para molestar al fantasma."],
-    "resident evil 2": ["Ahorra munición.", "No mates a todos los zombis.", "Revisa bien el mapa."],
-    "dead cells": ["No te encariñes con tus armas, prueba todo.", "Aprende a esquivar rodando.", "Invierte células de forma inteligente."],
-    "apex legends": ["Juega en equipo y no te separes.", "Aprende a usar el sistema de 'pings' (marcar).", "La movilidad es la clave para ganar."],
-    "left 4 dead 2": ["Manteneos juntos siempre.", "Comparte las curas.", "Escucha los sonidos de los infectados especiales."],
-    "it takes two": ["La comunicación es el 100% del juego.", "No os enfadéis si falláis.", "Disfrutad de los minijuegos secundarios."],
-    "valheim": ["Tala árboles pero cuidado de que no te caigan encima.", "Come tres tipos de comida diferentes.", "Construye cerca del agua al principio."],
-    "civilization vi": ["No descuides tu ejército aunque busques paz.", "Planifica los distritos con antelación.", "Juega el tutorial, hay mucha información."],
-    "five nights at freddys": ["Ahorra batería, no mires las cámaras todo el rato.", "Escucha los pasos.", "Cierra las puertas solo si es estrictamente necesario."],
-    "brawl stars": ["Céntrate en los objetivos del modo de juego, no solo en matar.", "Usa los muros para cubrirte.", "Juega en equipo y no vayas solo a por los rivales."],
-    "call of duty": ["Conoce el mapa y los puntos de reaparición.", "Ajusta la sensibilidad de tu cámara para apuntar mejor.", "Comunícate siempre si juegas en equipo."],
-    "solitario": ["Revela las cartas ocultas siempre que puedas.", "No vacíes un hueco si no tienes un Rey para poner.", "Piensa dos movimientos por delante."],
-    "clash royale": ["No gastes todo tu elixir de golpe.", "Aprende a defender con tropas baratas.", "Conoce el daño exacto que hacen tus hechizos a las torres."],
-    "ajedrez": ["Controla el centro del tablero desde el principio.", "Desarrolla tus piezas menores (caballos y alfiles) rápido.", "Protege a tu rey enrocando pronto."],
-    "clash of clans": ["No mejores tu ayuntamiento hasta tener todo lo demás al máximo.", "Guarda tus gemas para comprar constructores.", "Únete a un clan activo pronto para pedir tropas."],
-    "fall guys": ["No siempre ir el primero es lo mejor, observa los obstáculos.", "Aprende a usar el salto en plancha (dive) para llegar más lejos.", "Ten mucha paciencia en los niveles de supervivencia."],
-    "mario kart": ["Guarda los objetos defensivos (conchas verdes/plátanos) para protegerte la espalda.", "Aprende a derrapar en las curvas para conseguir miniturbos.", "Coge 10 monedas lo más rápido que puedas para correr más."]
-  },
-  "keyword_map": {
-    "solo": "solo", "solitario": "solo", "soloq": "solo", "individual": "solo", "un jugador": "solo", "campaña": "solo", "1 jugador": "solo",
-    "amigos": "multi", "cooperativo": "multi", "coop": "multi", "equipo": "multi", "compañia": "multi", "duo": "multi", "colegas": "multi", "colega": "multi", "grupo": "multi",
-    "multijugador": "multi", "online": "multi", "pvp": "multi", "internet": "multi", "con mas gente": "multi",
-    "competitivo": "competitivo", "ranked": "competitivo", "tryhard": "competitivo", "ganar": "competitivo", "esports": "competitivo", "torneos": "competitivo",
-    "casual": "relajado", "relajado": "relajado", "tranquilo": "relajado", "chill": "relajado", "relajante": "relajado", "facil": "relajado", "sencillo": "relajado", "calmado": "relajado", "sin estres": "relajado", "desconectar": "relajado",
-    "dificil": "dificil", "reto": "dificil", "desafiante": "dificil", "hardcore": "dificil", "complicado": "dificil", "sufrir": "dificil", "exigente": "dificil",
-    "poco tiempo": "poco_tiempo", "cortas": "poco_tiempo", "rapidas": "poco_tiempo", "rapido": "poco_tiempo", "un rato": "poco_tiempo", "express": "poco_tiempo", "rápido": "poco_tiempo", "movil": "poco_tiempo", "celular": "poco_tiempo", "rápidos": "poco_tiempo",
-    "mucho tiempo": "mucho_tiempo", "buen rato": "mucho_tiempo", "extenso": "mucho_tiempo","largo": "mucho_tiempo", "toda la tarde": "mucho_tiempo", "horas": "mucho_tiempo", "viciar": "mucho_tiempo", "larga": "mucho_tiempo", "largas": "mucho_tiempo",
-    "historia": "historia", "narrativa": "historia", "trama": "historia", "argumento": "historia", "lore": "historia", "personajes": "historia", "pelicula": "historia", "cuento": "historia",
-    "accion": "accion", "combate": "accion", "disparos": "accion", "disparo": "accion", "tiros": "accion", "tiro": "accion", "peleas": "accion", "frenético": "accion", "matar": "accion", "shooter": "accion", "guerra": "accion",
-    "estrategia": "estrategia", "tactico": "estrategia", "tactica": "estrategia","pensar": "estrategia", "turnos": "estrategia", "gestion": "estrategia", "planear": "estrategia", "puzzles": "estrategia", "rompecabezas": "estrategia", "conocimiento": "estrategia", "cartas": "estrategia", "mesa": "estrategia",
-    "explorar": "explorar", "exploracion": "explorar", "mundo abierto": "explorar", "aventura": "explorar", "descubrir": "explorar", "viajar": "explorar", "perderse": "explorar", "lugar": "explorar", "lugares": "explorar",
-    "terror": "miedo", "miedo": "miedo", "sustos": "miedo", "horror": "miedo", "panico": "miedo", "tension": "miedo", "asustar": "miedo", "angustia": "miedo", "scream": "miedo", "gritar": "miedo", "grito": "miedo", "pulsaciones": "miedo"
-  },
-  "game_names": [
-    "stardew valley", "journey", "valorant", "rocket league",
-    "life is strange", "the witcher 3", "minecraft", "overcooked 2",
-    "into the breach", "slay the spire", "hades", "dark souls",
-    "phasmophobia", "resident evil 2", "dead cells", "apex legends",
-    "left 4 dead 2", "it takes two", "valheim", "civilization vi",
-    "five nights at freddys", "brawl stars", "call of duty",
-    "solitario", "clash royale", "ajedrez", "clash of clans", 
-    "fall guys", "mario kart"
-  ],
- "intents": {
-    "farewell": ["adios", "hasta luego", "salir", "bye", "chao", "chau", "nos vemos", "hasta pronto", "me voy", "adeu", "dew"],
-    "greeting": ["hola", "buenas", "hey", "que tal", "buenos dias", "buenas tardes", "buenas noches", "saludos", "ep", "bon dia", "bona tarda", "bona nit"],
-    "thanks": ["gracias", "perfecto", "genial", "guay", "me sirve", "estupendo", "muy bien", "mil gracias", "te lo agradezco", "ok", "de acuerdo", "top", "gracies", "merci", "mersi", "perfecte", "perf", "t'ho agraeïxo"],
-    "guide": ["como empezar", "ayudame con", "consejos", "como juego", "como jugar", "explica", "guia", "enseña", "consells", "enseñame","guía","dona'm una guia","dame una guia","enseña", "tutorial","tips"],
-    "recommend": ["recomienda", "quiero jugar", "busco", "que juego", "que me recomiendas", "recomana", "vull jugar", "suggereix", "que puc jugar", "recomana'm", "sugiere", "sugiere-me"],
-    "reset": ["otro", "empezar de nuevo", "reset", "borrar", "cambiar"]
-  }
+{
+  "conditions": ["solo", "relajado"],
+  "conclusions": ["perfil_chill_solitario"]
+},
+{
+  "conditions": ["solo", "historia"],
+  "conclusions": ["perfil_narrativo"]
+},
+{
+  "conditions": ["multi", "competitivo"],
+  "conclusions": ["perfil_competitivo_online"]
+},
+{
+  "conditions": ["coop", "relajado"],
+  "conclusions": ["perfil_coop_relajado"]
+},
+{
+  "conditions": ["estrategia", "poco_tiempo"],
+  "conclusions": ["perfil_estrategia_corta"]
+},
+{
+  "conditions": ["accion", "dificil"],
+  "conclusions": ["perfil_accion_dificil"]
+},
+{
+  "conditions": ["explorar", "solo"],
+  "conclusions": ["perfil_exploracion_solo"]
+},
+{
+  "conditions": ["miedo", "multi"],
+  "conclusions": ["perfil_terror_grupo"]
+},
+{
+  "conditions": ["miedo", "solo"],
+  "conclusions": ["perfil_terror_solo"]
+},
+{
+  "conditions": ["accion", "solo", "poco_tiempo"],
+  "conclusions": ["perfil_accion_rapida"]
+},
+{
+  "conditions": ["mucho_tiempo", "solo"],
+  "conclusions": ["perfil_narrativo"]
+},
+{
+  "conditions": ["shooter", "coop"],
+  "conclusions": ["perfil_shooter_coop"]
+},
+{
+  "conditions": ["historia", "coop"],
+  "conclusions": ["perfil_coop_historia"]
+},
+{
+  "conditions": ["explorar", "coop"],
+  "conclusions": ["perfil_exploracion_coop"]
+},
+{
+  "conditions": ["estrategia", "multi"],
+  "conclusions": ["perfil_estrategia_multi"]
+},
+{
+  "conditions": ["miedo", "poco_tiempo"],
+  "conclusions": ["perfil_terror_rapido"]
+},
+{
+  "conditions": ["accion", "multi", "poco_tiempo"],
+  "conclusions": ["perfil_accion_multi_rapido"]
+},
+{
+  "conditions": ["estrategia", "solo", "relajado"],
+  "conclusions": ["perfil_estrategia_chill"]
+},
+{
+  "conditions": ["estrategia", "multi", "poco_tiempo"],
+  "conclusions": ["perfil_estrategia_multi_rapida"]
+},
+{
+  "conditions": ["estrategia", "multi", "mucho_tiempo"],
+  "conclusions": ["perfil_estrategia_multi_larga"]
+},
+{
+  "conditions": ["accion", "multi", "relajado"],
+  "conclusions": ["perfil_accion_chill_multi"]
+},
+
+{
+  "conditions": ["perfil_chill_solitario"],
+  "conclusions": ["recomendar_stardew_valley", "recomendar_journey"]
+},
+{
+  "conditions": ["perfil_narrativo"],
+  "conclusions": ["recomendar_life_is_strange", "recomendar_the_witcher_3"]
+},
+{
+  "conditions": ["perfil_competitivo_online"],
+  "conclusions": ["recomendar_valorant", "recomendar_rocket_league"]
+},
+{
+  "conditions": ["perfil_coop_relajado"],
+  "conclusions": ["recomendar_minecraft", "recomendar_overcooked_2"]
+},
+{
+  "conditions": ["perfil_estrategia_corta"],
+  "conclusions": ["recomendar_into_the_breach", "recomendar_slay_the_spire"]
+},
+{
+  "conditions": ["perfil_accion_dificil"],
+  "conclusions": ["recomendar_hades", "recomendar_dark_souls"]
+},
+{
+  "conditions": ["perfil_exploracion_solo"],
+  "conclusions": ["recomendar_minecraft", "recomendar_journey"]
+},
+{
+  "conditions": ["perfil_terror_grupo"],
+  "conclusions": ["recomendar_phasmophobia"]
+},
+{
+  "conditions": ["perfil_terror_solo"],
+  "conclusions": ["recomendar_resident_evil_2"]
+},
+{
+  "conditions": ["perfil_accion_rapida"],
+  "conclusions": ["recomendar_dead_cells", "recomendar_hades"]
+},
+{
+  "conditions": ["perfil_shooter_coop"],
+  "conclusions": ["recomendar_left_4_dead_2", "recomendar_borderlands_2"]
+},
+{
+  "conditions": ["perfil_coop_historia"],
+  "conclusions": ["recomendar_it_takes_two"]
+},
+{
+  "conditions": ["perfil_exploracion_coop"],
+  "conclusions": ["recomendar_valheim"]
+},
+{
+  "conditions": ["perfil_estrategia_multi"],
+  "conclusions": ["recomendar_civilization_vi"]
+},
+{
+  "conditions": ["perfil_terror_rapido"],
+  "conclusions": ["recomendar_five_nights_at_freddys"]
+},
+{
+  "conditions": ["perfil_accion_multi_rapido"],
+  "conclusions": ["recomendar_brawl_stars", "recomendar_call_of_duty"]
+},
+{
+  "conditions": ["perfil_estrategia_chill"],
+  "conclusions": ["recomendar_solitario"]
+},
+{
+  "conditions": ["perfil_estrategia_multi_rapida"],
+  "conclusions": ["recomendar_clash_royale", "recomendar_ajedrez"]
+},
+{
+  "conditions": ["perfil_estrategia_multi_larga"],
+  "conclusions": ["recomendar_clash_of_clans"]
+},
+{
+  "conditions": ["perfil_accion_chill_multi"],
+  "conclusions": ["recomendar_fall_guys", "recomendar_mario_kart"]
+}
+
+],
+
+"guides": {
+"stardew valley": [
+"Empieza plantando cultivos baratos y riégalos cada mañana.",
+"No gastes toda tu energía de golpe: reserva una parte para explorar o recoger recursos.",
+"Habla con los habitantes del pueblo para mejorar relaciones y descubrir eventos.",
+"Guarda parte de tus productos para completar lotes del centro comunitario."
+],
+"journey": [
+"Juega sin prisas y explora cada zona con calma.",
+"La experiencia y el viaje son más importantes que llegar rápidamente al final.",
+"Observa el entorno: muchas indicaciones se comunican visualmente.",
+"Coopera con otros jugadores cuando aparezcan, aunque no puedas hablar con ellos."
+],
+"valorant": [
+"Empieza con agentes sencillos y aprende bien sus habilidades.",
+"Practica el control del retroceso y evita disparar mientras corres.",
+"Aprende las rutas principales y los puntos habituales de cada mapa.",
+"Comunícate con tu equipo y comparte la posición de los rivales."
+],
+"rocket league": [
+"Aprende a rotar para no perseguir siempre la pelota.",
+"Practica disparos básicos y despejes antes de intentar jugadas complejas.",
+"Mantén una buena distancia respecto a tus compañeros.",
+"Gestiona el turbo y recoge pequeñas cargas cuando no puedas ir a por las grandes."
+],
+"life is strange": [
+"Explora cada escenario antes de avanzar.",
+"Habla con los personajes secundarios para descubrir información adicional.",
+"Piensa con calma antes de tomar decisiones importantes.",
+"Lee mensajes, notas y objetos para comprender mejor la historia."
+],
+"the witcher 3": [
+"Haz misiones secundarias: muchas tienen historias tan trabajadas como la trama principal.",
+"Consulta el bestiario antes de enfrentarte a monstruos difíciles.",
+"Utiliza señales, aceites y pociones según el enemigo.",
+"Explora los tablones de anuncios para desbloquear contratos y zonas interesantes."
+],
+"minecraft": [
+"Consigue madera durante los primeros minutos y fabrica herramientas básicas.",
+"Construye un refugio antes de que llegue la primera noche.",
+"Fabrica una cama cuanto antes para establecer tu punto de reaparición.",
+"Lleva antorchas, comida y un pico adicional cuando explores cuevas.",
+"No caves directamente hacia abajo: podrías caer en lava o en una zona peligrosa."
+],
+"overcooked 2": [
+"Reparte las tareas antes de empezar cada nivel.",
+"Comunica constantemente qué ingrediente estás preparando.",
+"No corras sin sentido: mantener el orden suele ser más importante que ir rápido.",
+"Aprovecha los huecos entre pedidos para lavar platos y preparar ingredientes."
+],
+"into the breach": [
+"Prioriza evitar daños a los edificios.",
+"Mover enemigos puede ser más útil que eliminarlos.",
+"Comprueba el orden de los ataques enemigos antes de mover tus unidades.",
+"Piensa cada turno como si fuera un pequeño puzle táctico."
+],
+"slay the spire": [
+"No añadas cartas al mazo sin pensar en su utilidad.",
+"Eliminar cartas débiles puede mejorar mucho la consistencia.",
+"Busca sinergias entre cartas, reliquias y efectos.",
+"Adapta tu estrategia según los enemigos y jefes que encontrarás."
+],
+"hades": [
+"Morir forma parte del progreso: cada intento te permite mejorar.",
+"Prueba distintas armas y bendiciones para descubrir combinaciones útiles.",
+"Invierte en el Espejo de la Noche para obtener mejoras permanentes.",
+"Habla con los personajes después de cada intento para desbloquear historia y ventajas."
+],
+"dark souls": [
+"Avanza despacio y observa los patrones de ataque enemigos.",
+"Gestiona la estamina: atacar sin reservar energía puede dejarte indefenso.",
+"No te preocupes si mueres varias veces; aprender cada zona es parte del juego.",
+"Mejora tus armas y escoge una configuración que se adapte a tu estilo."
+],
+"phasmophobia": [
+"Empieza en dificultad baja para aprender a utilizar los objetos.",
+"Busca pruebas con orden y comunica todo lo que descubras.",
+"No permanezcas demasiado tiempo en zonas peligrosas si tu cordura está baja.",
+"Durante una cacería, apaga dispositivos electrónicos y busca un escondite."
+],
+"resident evil 2": [
+"Ahorra munición y evita disparar si puedes esquivar al enemigo.",
+"Consulta el mapa para localizar habitaciones pendientes de explorar.",
+"Guarda objetos importantes en el baúl si no los necesitas inmediatamente.",
+"No intentes eliminar a todos los enemigos: gestionar recursos es parte del reto."
+],
+"dead cells": [
+"Prueba diferentes armas y no te encariñes demasiado con una sola combinación.",
+"Aprende a esquivar rodando y a reconocer los patrones enemigos.",
+"Invierte células siempre que puedas antes de arriesgarte en una nueva zona.",
+"Explora las rutas alternativas para desbloquear mejoras permanentes."
+],
+"left 4 dead 2": [
+"Manteneos juntos para evitar que los infectados especiales aíslen a un compañero.",
+"Compartid curas y munición según las necesidades del equipo.",
+"Escucha los sonidos característicos de cada infectado especial.",
+"Avanzad con ritmo constante, pero deteneos si algún compañero queda atrás."
+],
+"borderlands 2": [
+"Prueba diferentes personajes antes de decidir tu estilo principal.",
+"Compara las estadísticas de las armas y no te quedes únicamente con el nivel.",
+"Combina habilidades entre compañeros para aprovechar mejor el cooperativo.",
+"Completa misiones secundarias para conseguir experiencia y equipamiento."
+],
+"it takes two": [
+"La comunicación es esencial: explicad qué está haciendo cada jugador.",
+"Experimentad con las habilidades únicas de cada personaje.",
+"No os frustréis si falláis una sección; muchos retos requieren coordinación.",
+"Explorad los escenarios para encontrar minijuegos opcionales."
+],
+"valheim": [
+"Come tres tipos de comida diferentes para mejorar vida y resistencia.",
+"Construye un refugio cerca del agua durante las primeras horas.",
+"Cuidado al talar árboles: pueden causarte daño al caer.",
+"Prepárate bien antes de entrar en un nuevo bioma."
+],
+"civilization vi": [
+"Planifica las ciudades pensando en la colocación futura de los distritos.",
+"No descuides el ejército aunque busques una victoria pacífica.",
+"Aprovecha las bonificaciones de cada civilización.",
+"Juega el tutorial o una partida de dificultad baja para aprender los sistemas básicos."
+],
+"five nights at freddys": [
+"Ahorra batería y evita mirar las cámaras constantemente.",
+"Escucha con atención los sonidos y pasos.",
+"Cierra las puertas únicamente cuando sea necesario.",
+"Aprende el comportamiento de cada animatrónico."
+],
+"brawl stars": [
+"Céntrate en el objetivo del modo de juego y no únicamente en eliminar rivales.",
+"Utiliza muros y arbustos para cubrirte.",
+"Aprende el alcance y la función de cada personaje.",
+"Coordínate con tu equipo y evita lanzarte solo contra varios enemigos."
+],
+"call of duty": [
+"Aprende el mapa y los puntos habituales de reaparición.",
+"Ajusta la sensibilidad hasta encontrar una configuración cómoda.",
+"No corras constantemente: controlar ángulos suele ser más efectivo.",
+"Comunícate con tu equipo cuando juegues modos competitivos."
+],
+"solitario": [
+"Revela cartas ocultas siempre que puedas.",
+"No vacíes un hueco si no dispones de un rey para colocarlo.",
+"Piensa varios movimientos por adelantado.",
+"Evita mover cartas automáticamente a los montones finales si todavía pueden ayudarte."
+],
+"clash royale": [
+"No gastes todo el elixir de golpe.",
+"Aprende a defender utilizando cartas baratas.",
+"Conoce el daño aproximado de tus hechizos sobre las torres.",
+"Construye un mazo equilibrado con condiciones de victoria, defensa y apoyo."
+],
+"ajedrez": [
+"Controla el centro del tablero desde el inicio.",
+"Desarrolla caballos y alfiles antes de mover demasiadas veces la misma pieza.",
+"Protege a tu rey enrocando pronto cuando sea posible.",
+"Antes de mover, comprueba amenazas, capturas y respuestas del rival."
+],
+"clash of clans": [
+"No mejores el ayuntamiento demasiado pronto.",
+"Guarda gemas para desbloquear constructores adicionales.",
+"Únete a un clan activo para obtener tropas y participar en eventos.",
+"Mantén ocupados a los constructores siempre que tengas recursos."
+],
+"fall guys": [
+"No siempre conviene ir primero: observa los obstáculos antes de avanzar.",
+"Practica el salto en plancha para cubrir más distancia.",
+"Evita acumulaciones de jugadores cuando exista una ruta alternativa.",
+"Mantén la calma en las pruebas de supervivencia."
+],
+"mario kart": [
+"Aprende a derrapar para obtener miniturbos en las curvas.",
+"Guarda objetos defensivos para protegerte de ataques por la espalda.",
+"Intenta recoger monedas durante las primeras vueltas.",
+"Practica los atajos de cada circuito antes de utilizarlos en partidas competitivas."
+]
+},
+
+"keyword_map": {
+"solo": "solo",
+"solitario": "solo",
+"individual": "solo",
+"un jugador": "solo",
+"1 jugador": "solo",
+"campaña": "solo",
+
+"soloq": "multi",
+"solo queue": "multi",
+"cola en solitario": "multi",
+
+"amigos": "multi",
+"equipo": "multi",
+"compañía": "multi",
+"colegas": "multi",
+"colega": "multi",
+"grupo": "multi",
+"multijugador": "multi",
+"online": "multi",
+"pvp": "multi",
+"internet": "multi",
+"con más gente": "multi",
+
+"cooperativo": "coop",
+"cooperativa": "coop",
+"coop": "coop",
+"co-op": "coop",
+"cooperativo local": "coop",
+"cooperativo online": "coop",
+"coop local": "coop",
+"coop online": "coop",
+"pantalla dividida": "coop",
+"dúo": "coop",
+
+"competitivo": "competitivo",
+"ranked": "competitivo",
+"tryhard": "competitivo",
+"ganar": "competitivo",
+"esports": "competitivo",
+"torneos": "competitivo",
+
+"casual": "relajado",
+"relajado": "relajado",
+"relajante": "relajado",
+"tranquilo": "relajado",
+"chill": "relajado",
+"fácil": "relajado",
+"sencillo": "relajado",
+"calmado": "relajado",
+"sin estrés": "relajado",
+"desconectar": "relajado",
+
+"difícil": "dificil",
+"reto": "dificil",
+"desafiante": "dificil",
+"hardcore": "dificil",
+"complicado": "dificil",
+"sufrir": "dificil",
+"exigente": "dificil",
+
+"poco tiempo": "poco_tiempo",
+"cortas": "poco_tiempo",
+"rápidas": "poco_tiempo",
+"rápido": "poco_tiempo",
+"un rato": "poco_tiempo",
+"express": "poco_tiempo",
+
+"mucho tiempo": "mucho_tiempo",
+"buen rato": "mucho_tiempo",
+"extenso": "mucho_tiempo",
+"largo": "mucho_tiempo",
+"larga": "mucho_tiempo",
+"largas": "mucho_tiempo",
+"toda la tarde": "mucho_tiempo",
+"horas": "mucho_tiempo",
+"viciar": "mucho_tiempo",
+
+"historia": "historia",
+"narrativa": "historia",
+"trama": "historia",
+"argumento": "historia",
+"lore": "historia",
+"personajes": "historia",
+"película": "historia",
+"cuento": "historia",
+
+"acción": "accion",
+"combate": "accion",
+"disparos": "accion",
+"disparo": "accion",
+"tiros": "accion",
+"tiro": "accion",
+"peleas": "accion",
+"frenético": "accion",
+"matar": "accion",
+"guerra": "accion",
+
+"shooter": "shooter",
+
+"estrategia": "estrategia",
+"táctico": "estrategia",
+"táctica": "estrategia",
+"pensar": "estrategia",
+"turnos": "estrategia",
+"gestión": "estrategia",
+"planear": "estrategia",
+"puzles": "estrategia",
+"rompecabezas": "estrategia",
+"conocimiento": "estrategia",
+"cartas": "estrategia",
+"mesa": "estrategia",
+
+"explorar": "explorar",
+"exploración": "explorar",
+"mundo abierto": "explorar",
+"aventura": "explorar",
+"descubrir": "explorar",
+"viajar": "explorar",
+"perderse": "explorar",
+"lugares": "explorar",
+
+"terror": "miedo",
+"miedo": "miedo",
+"sustos": "miedo",
+"horror": "miedo",
+"pánico": "miedo",
+"tensión": "miedo",
+"asustar": "miedo",
+"angustia": "miedo",
+"scream": "miedo",
+"gritar": "miedo",
+"grito": "miedo",
+"pulsaciones": "miedo"
+}
 }
