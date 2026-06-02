@@ -66,14 +66,12 @@ class SteamLibraryManager:
             ""
         )
 
-        # Ignorar contenido entre paréntesis.
         name = re.sub(
             r"\([^)]*\)",
             " ",
             name,
         )
 
-        # Convertir separadores y símbolos en espacios.
         name = re.sub(
             r"[^a-z0-9\s]",
             " ",
@@ -234,7 +232,6 @@ class SteamLibraryManager:
         if not normalized_rawg_name:
             return None
 
-        # Caso ideal: coincidencia exacta.
         if (
             normalized_rawg_name
             in steam_library_map
@@ -316,8 +313,7 @@ class SteamLibraryManager:
 
             appid = steam_game.get("appid")
 
-            # Evitar devolver dos resultados RAWG diferentes
-            # asociados al mismo juego Steam.
+
             if (
                 appid is not None
                 and appid in used_appids

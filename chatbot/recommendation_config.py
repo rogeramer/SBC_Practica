@@ -36,9 +36,6 @@ PLATFORM_LABELS = {
 }
 
 
-# =========================================================
-# ETIQUETAS IMPORTANTES
-# =========================================================
 
 COOP_TAGS = {
     "co-op",
@@ -67,9 +64,6 @@ HORROR_TAGS = {
     "survival-horror",
 }
 
-# =========================================================
-# ETIQUETAS UTILIZADAS POR EL MOTOR HEURÍSTICO
-# =========================================================
 
 GENRE_LABELS = {
     "role-playing-games-rpg": "RPG",
@@ -131,9 +125,6 @@ COOP_SUPPORT_TAGS = {
     "local-multiplayer",
 }
 
-# =========================================================
-# PRÓXIMOS LANZAMIENTOS
-# =========================================================
 
 ONLY_UNRELEASED_MARKERS = {
     "proximo",
@@ -153,10 +144,6 @@ ALLOW_UNRELEASED_MARKERS = {
     "publicados y futuros",
 }
 
-
-# =========================================================
-# PERFILES DEL SISTEMA EXPERTO
-# =========================================================
 
 PROFILE_TO_RAWG = {
     "perfil_chill_solitario": {

@@ -72,9 +72,6 @@ class RawgGameChatbot:
         self._load_knowledge_base()
         self.reset()
 
-    # =========================================================
-    # BASE DE CONOCIMIENTO
-    # =========================================================
 
     def _load_knowledge_base(self):
         """
@@ -114,8 +111,6 @@ class RawgGameChatbot:
             )
         ]
 
-        # Normalizar las expresiones para compararlas
-        # con el texto preprocesado del usuario.
         self.keyword_map = {
             self.extractor.preprocess_text(
                 phrase
@@ -126,7 +121,6 @@ class RawgGameChatbot:
             ).items()
         }
 
-        # Conservar el nombre original para mostrarlo en pantalla.
         self.guides = {
             self.extractor.preprocess_text(
                 game_name
@@ -272,9 +266,6 @@ class RawgGameChatbot:
             games,
             request_data,
         )
-    # =========================================================
-    # SISTEMA EXPERTO
-    # =========================================================
 
     def extract_facts(self, text):
         """
@@ -377,8 +368,6 @@ class RawgGameChatbot:
                     ),
                 })
 
-        # Permitir perfiles añadidos manualmente
-        # aunque no procedan directamente de una regla.
         if not candidates:
             for fact in self.facts:
                 if fact.startswith(
@@ -417,9 +406,6 @@ class RawgGameChatbot:
             "profile"
         ]
 
-    # =========================================================
-    # MEMORIA CONVERSACIONAL
-    # =========================================================
 
     def reset(self):
         """
@@ -569,10 +555,6 @@ class RawgGameChatbot:
 
         self.facts.clear()
 
-    # =========================================================
-    # EXTRACCIÓN DE PREFERENCIAS CONVERSACIONALES
-    # =========================================================
-
     def _contains_any_phrase(
         self,
         text,
@@ -613,20 +595,12 @@ class RawgGameChatbot:
             filters
         )
 
-        # -------------------------
-        # PLATAFORMA
-        # -------------------------
-
         if filters.get("platforms"):
             self.user_preferences[
                 "platform"
             ] = filters[
                 "platforms"
             ][-1]
-
-        # -------------------------
-        # GÉNERO
-        # -------------------------
 
         if filters.get("genres"):
             self.user_preferences[
@@ -641,18 +615,10 @@ class RawgGameChatbot:
             ]
         )
 
-        # -------------------------
-        # NARRATIVA
-        # -------------------------
-
         if "story-rich" in tags:
             self.facts.add(
                 "historia"
             )
-
-        # -------------------------
-        # COOPERATIVO
-        # -------------------------
 
         cooperative_tags = {
             "co-op",
@@ -694,10 +660,6 @@ class RawgGameChatbot:
                 "coop"
             )
 
-        # -------------------------
-        # MULTIJUGADOR GENÉRICO
-        # -------------------------
-
         friend_words = [
             "amigo",
             "amigos",
@@ -738,10 +700,6 @@ class RawgGameChatbot:
                 "multi"
             )
 
-        # -------------------------
-        # SOLITARIO
-        # -------------------------
-
         if "singleplayer" in tags:
             self.user_preferences[
                 "mode"
@@ -750,10 +708,6 @@ class RawgGameChatbot:
             self.facts.add(
                 "solo"
             )
-
-        # -------------------------
-        # ESTILO
-        # -------------------------
 
         if "relaxing" in tags:
             self.user_preferences[
@@ -782,10 +736,6 @@ class RawgGameChatbot:
                 "dificil"
             )
 
-        # -------------------------
-        # TEMÁTICAS
-        # -------------------------
-
         if "horror" in tags:
             self.facts.add(
                 "miedo"
@@ -796,9 +746,6 @@ class RawgGameChatbot:
                 "explorar"
             )
 
-        # -------------------------
-        # RESPUESTAS ABIERTAS
-        # -------------------------
 
         open_answers = [
             "me da igual",
@@ -821,10 +768,6 @@ class RawgGameChatbot:
             ] = [4]
 
         return filters
-
-    # =========================================================
-    # DECISIÓN CONVERSACIONAL
-    # =========================================================
 
     def can_recommend_now(
         self,
@@ -943,9 +886,6 @@ class RawgGameChatbot:
 
         return None
 
-    # =========================================================
-    # RECOMENDACIÓN GENERAL RAWG
-    # =========================================================
 
     def _recommend_general_from_preferences(
         self,
@@ -965,7 +905,6 @@ class RawgGameChatbot:
             filters
         )
 
-        # Evitar buscar literalmente frases conversacionales.
         filters["search"] = None
 
         self._update_context(
@@ -1034,10 +973,6 @@ class RawgGameChatbot:
         self._clear_recommendation_preferences()
 
         return response
-
-    # =========================================================
-    # STEAM
-    # =========================================================
 
     def _extract_steamid(self, text):
         match = re.search(
@@ -1180,8 +1115,6 @@ class RawgGameChatbot:
             filters
         )
 
-        # Steam define el catálogo.
-        # No tiene sentido filtrar por consola.
         filters["search"] = None
         filters["platforms"] = []
 
@@ -1249,8 +1182,6 @@ class RawgGameChatbot:
             )
         )
 
-        # Compatibilidad primero.
-        # Menos horas como desempate.
         ranked_owned_games.sort(
             key=lambda game: (
                 game.get(
@@ -1337,10 +1268,6 @@ class RawgGameChatbot:
         return "\n".join(
             lines
         )
-
-    # =========================================================
-    # DETALLES Y GUÍAS
-    # =========================================================
 
     def _details_from_index(
         self,
@@ -1468,7 +1395,6 @@ class RawgGameChatbot:
             ):
                 return game
 
-        # Segunda búsqueda algo más flexible.
         result = self.rawg.search_games(
             search=candidate,
             page_size=10,
@@ -1531,7 +1457,6 @@ class RawgGameChatbot:
             )
         )
 
-        # Buscar primero en la última lista.
         for game in self.context.get(
                 "last_results",
                 [],
@@ -1694,9 +1619,6 @@ class RawgGameChatbot:
             f"para '{candidate}'."
         )
 
-    # =========================================================
-    # TOP JUEGOS PARA MÓVIL
-    # =========================================================
 
     def _format_top_mobile_games(self):
         """
@@ -1730,9 +1652,6 @@ class RawgGameChatbot:
             safe_context,
         )
 
-    # =========================================================
-    # RESPUESTA PRINCIPAL
-    # =========================================================
 
     def respond(
         self,
@@ -1757,10 +1676,6 @@ class RawgGameChatbot:
             steamid = self._extract_steamid(
                 clean_text
             )
-
-            # =================================================
-            # 1. CARGAR STEAM Y EJECUTAR ACCIONES COMPUESTAS
-            # =================================================
 
             if (
                 steamid
@@ -1823,10 +1738,6 @@ class RawgGameChatbot:
                     "• cargar steam 7656119XXXXXXXXXX"
                 )
 
-            # =================================================
-            # 2. INTENCIONES GENERALES
-            # =================================================
-
             if intent == "greeting":
                 return format_welcome_message()
 
@@ -1875,9 +1786,6 @@ class RawgGameChatbot:
                     clean_text
                 )
 
-            # =================================================
-            # 3. ESTADÍSTICAS STEAM
-            # =================================================
 
             if intent == "most_played":
                 if not self.context[
@@ -1893,16 +1801,10 @@ class RawgGameChatbot:
 
 
 
-            # =================================================
-            # 5. TOP MÓVIL
-            # =================================================
 
             if intent == "top_games":
                 return self._format_top_mobile_games()
 
-            # =================================================
-            # 6. BIBLIOTECA STEAM
-            # =================================================
 
             if self._is_library_query(
                 clean_text
@@ -1922,9 +1824,6 @@ class RawgGameChatbot:
                 return self._recommend_from_steam_library(
                     clean_text
                 )
-            # =================================================
-            # 7. RECOMENDACIÓN GENERAL RAWG
-            # =================================================
 
             filters = self._save_preferences(
                 clean_text

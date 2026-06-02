@@ -8,13 +8,10 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Clave secreta para gestionar la sesión del usuario.
-# En el .env deberías tener algo como:
-# FLASK_SECRET_KEY=una_clave_larga_y_aleatoria
+
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "sbc_practica_secret")
 
-# Diccionario simple para guardar un chatbot por sesión.
-# Para una práctica local está bien.
+
 bots = {}
 
 

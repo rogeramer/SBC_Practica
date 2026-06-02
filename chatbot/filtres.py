@@ -46,9 +46,7 @@ class FilterExtractor:
             )
         )
 
-        # =====================================================
-        # ORDENACIÓN
-        # =====================================================
+
 
         self.order_keywords = {
             "mejor valorados": "-rating",
@@ -70,13 +68,7 @@ class FilterExtractor:
             "antiguos": "released",
         }
 
-        # =====================================================
-        # PLATAFORMAS
-        # =====================================================
-        #
-        # El texto llega normalizado:
-        # "móvil" → "movil"
-        # =====================================================
+
 
         self.platform_aliases = {
             "nintendo switch": 7,
@@ -110,17 +102,9 @@ class FilterExtractor:
             "linux": 6,
         }
 
-        # =====================================================
-        # TAGS
-        # =====================================================
-        #
-        # Los alias específicos aparecen antes que los generales.
-        # El código también los ordenará por longitud para evitar
-        # perder precisión.
-        # =====================================================
+
 
         self.tag_aliases = {
-            # Cooperativo específico
             "cooperativo online": "online-co-op",
             "cooperativa online": "online-co-op",
             "cooperatiu online": "online-co-op",
@@ -134,36 +118,30 @@ class FilterExtractor:
             "pantalla dividida": "split-screen",
             "split screen": "split-screen",
 
-            # Cooperativo genérico
             "cooperativo": "co-op",
             "cooperativa": "co-op",
             "cooperatiu": "co-op",
             "coop": "co-op",
             "co-op": "co-op",
 
-            # Multijugador
             "multijugador": "multiplayer",
             "multiplayer": "multiplayer",
 
-            # Solitario
             "singleplayer": "singleplayer",
             "single player": "singleplayer",
             "solitario": "singleplayer",
             "solitari": "singleplayer",
             "solo": "singleplayer",
 
-            # Narrativa
             "historia rica": "story-rich",
             "buena historia": "story-rich",
             "narrativo": "story-rich",
             "narrativa": "story-rich",
             "historia": "story-rich",
 
-            # Exploración
             "mundo abierto": "open-world",
             "open world": "open-world",
 
-            # Estilo
             "relajante": "relaxing",
             "relajado": "relaxing",
             "relajada": "relaxing",
@@ -181,7 +159,6 @@ class FilterExtractor:
             "desafio": "difficult",
             "hard": "difficult",
 
-            # Temáticas y mecánicas
             "terror": "horror",
             "miedo": "horror",
             "horror": "horror",
@@ -198,9 +175,6 @@ class FilterExtractor:
             "turn based": "turn-based",
         }
 
-        # =====================================================
-        # GÉNEROS
-        # =====================================================
 
         self.genre_aliases = {
             "rpg": "role-playing-games-rpg",
@@ -241,9 +215,6 @@ class FilterExtractor:
             "casual": "casual",
         }
 
-    # =========================================================
-    # NORMALIZACIÓN
-    # =========================================================
 
     def preprocess_text(self, text):
         """
@@ -269,8 +240,7 @@ class FilterExtractor:
             "ascii"
         )
 
-        # Mantener guiones porque RAWG utiliza slugs como:
-        # co-op, open-world, story-rich...
+
         text = re.sub(
             r"[^\w\s\-]",
             " ",
@@ -305,9 +275,6 @@ class FilterExtractor:
             )
         )
 
-    # =========================================================
-    # CATÁLOGOS RAWG
-    # =========================================================
 
     def _build_lookup(self, items):
         lookup = {}
@@ -354,9 +321,6 @@ class FilterExtractor:
 
         return lookup
 
-    # =========================================================
-    # REFERENCIAS A RESULTADOS ANTERIORES
-    # =========================================================
 
     def extract_index_reference(self, text):
         """
@@ -430,9 +394,6 @@ class FilterExtractor:
 
         return candidate
 
-    # =========================================================
-    # EXTRACCIÓN DE FILTROS
-    # =========================================================
 
     def extract_filters(self, text):
         """
@@ -457,7 +418,6 @@ class FilterExtractor:
         tags = []
         platforms = []
 
-        # Catálogo real de RAWG.
         for key, item in self.genre_lookup.items():
             if (
                 key
@@ -471,7 +431,6 @@ class FilterExtractor:
                 if slug and slug not in genres:
                     genres.append(slug)
 
-        # Alias conversacionales.
         for alias, slug in sorted(
             self.genre_aliases.items(),
             key=lambda item: len(item[0]),
@@ -486,7 +445,6 @@ class FilterExtractor:
             ):
                 genres.append(slug)
 
-        # Catálogo real de tags RAWG.
         for key, item in self.tag_lookup.items():
             if (
                 key
@@ -500,7 +458,6 @@ class FilterExtractor:
                 if slug and slug not in tags:
                     tags.append(slug)
 
-        # Alias de tags.
         for alias, slug in sorted(
             self.tag_aliases.items(),
             key=lambda item: len(item[0]),
@@ -515,7 +472,6 @@ class FilterExtractor:
             ):
                 tags.append(slug)
 
-        # Plataformas.
         for alias, platform_id in sorted(
             self.platform_aliases.items(),
             key=lambda item: len(item[0]),
@@ -532,7 +488,6 @@ class FilterExtractor:
                     platform_id
                 )
 
-        # Ordenación.
         ordering = None
 
         for key, value in sorted(
@@ -547,8 +502,6 @@ class FilterExtractor:
                 ordering = value
                 break
 
-        # Detectar cualquier año razonable:
-        # 2022, 2025, 2026, 2030...
         dates = None
 
         year_match = re.search(
@@ -591,9 +544,6 @@ class FilterExtractor:
             "metacritic": metacritic,
         }
 
-    # =========================================================
-    # BÚSQUEDA POR NOMBRE
-    # =========================================================
 
     def _infer_search_text(
         self,
@@ -662,8 +612,7 @@ class FilterExtractor:
             if token not in generic_words
         ]
 
-        # Si ya existen filtros, no buscamos literalmente
-        # una frase conversacional dentro del nombre.
+
         if genres or tags or platforms:
             return None
 

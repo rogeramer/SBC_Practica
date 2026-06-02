@@ -29,9 +29,7 @@ class RecommendationEngine:
     def __init__(self, rawg_service):
         self.rawg = rawg_service
 
-    # =========================================================
-    # UTILIDADES DE NORMALIZACIÓN
-    # =========================================================
+
 
     def _split_csv_values(self, value):
         """
@@ -98,9 +96,6 @@ class RecommendationEngine:
 
         return platform_ids
 
-    # =========================================================
-    # FECHAS Y PRÓXIMOS LANZAMIENTOS
-    # =========================================================
 
     def _get_release_date(self, game):
         released = game.get("released")
@@ -179,9 +174,6 @@ class RecommendationEngine:
             "allow_mixed_releases": allow_mixed_releases,
         }
 
-    # =========================================================
-    # EXPLICACIONES
-    # =========================================================
 
     def _label_genre(self, slug):
         return GENRE_LABELS.get(
@@ -204,9 +196,6 @@ class RecommendationEngine:
         if reason and reason not in reasons:
             reasons.append(reason)
 
-    # =========================================================
-    # COOPERATIVO
-    # =========================================================
 
     def _coop_tier(self, game_tags):
         """
@@ -231,9 +220,6 @@ class RecommendationEngine:
 
         return 1
 
-    # =========================================================
-    # CONSTRUCCIÓN DE LA PETICIÓN
-    # =========================================================
 
     def build_request(
         self,
@@ -306,8 +292,6 @@ class RecommendationEngine:
             or context.get("dates")
         )
 
-        # Cuando el usuario pide exclusivamente próximos lanzamientos,
-        # RAWG también debe buscar dentro de un rango futuro.
         if (
             release_mode["only_unreleased"]
             and not dates
@@ -356,9 +340,6 @@ class RecommendationEngine:
             "profile": profile,
         }
 
-    # =========================================================
-    # RECUPERACIÓN DE CANDIDATOS RAWG
-    # =========================================================
 
     def _merge_unique_games(
         self,
@@ -481,8 +462,6 @@ class RecommendationEngine:
             else None
         )
 
-        # Cooperativo y próximos lanzamientos requieren
-        # algo más de cobertura.
         pages = (
             [1, 2]
             if (
@@ -504,9 +483,6 @@ class RecommendationEngine:
             pages=pages,
         )
 
-        # Ampliación controlada:
-        # se quitan tags de RAWG, pero se mantienen
-        # como restricciones locales.
         if (
             tags
             and len(collected_games) < 25
@@ -525,9 +501,6 @@ class RecommendationEngine:
                 )
             )
 
-        # Segunda ampliación:
-        # se quitan géneros de RAWG, pero también
-        # se validan después localmente.
         if (
             genres
             and len(collected_games) < 25
@@ -548,9 +521,6 @@ class RecommendationEngine:
 
         return collected_games
 
-    # =========================================================
-    # RESTRICCIONES OBLIGATORIAS
-    # =========================================================
 
     def _matches_mandatory_constraints(
         self,
@@ -620,16 +590,12 @@ class RecommendationEngine:
         ):
             return False
 
-        # Cooperativo explícito:
-        # multiplayer por sí solo no es suficiente.
         if (
             "co-op" in explicit_tags
             and "co-op" not in game_tags
         ):
             return False
 
-        # Multijugador genérico:
-        # aceptamos multiplayer o co-op.
         if "multiplayer" in explicit_tags:
             if not {
                 "multiplayer",
@@ -651,9 +617,6 @@ class RecommendationEngine:
 
         return True
 
-    # =========================================================
-    # EXPLICACIONES NATURALES
-    # =========================================================
 
     def _build_natural_reasons(
         self,
@@ -717,8 +680,6 @@ class RecommendationEngine:
                 ),
             )
 
-        # Evitar repeticiones innecesarias:
-        # RPG ya aparece como género.
         ignored_reason_tags = {
             "rpg",
         }
@@ -730,8 +691,6 @@ class RecommendationEngine:
             - ignored_reason_tags
         )
 
-        # El cooperativo se explica aparte
-        # con mayor precisión.
         matched_explicit_tags.discard(
             "co-op"
         )
@@ -836,9 +795,6 @@ class RecommendationEngine:
 
         return reasons[:3]
 
-    # =========================================================
-    # HEURÍSTICA
-    # =========================================================
 
     def _calculate_game_score(
         self,
@@ -884,8 +840,6 @@ class RecommendationEngine:
             "profile_tags"
         ]
 
-        # RPG puede aparecer como género y tag.
-        # No se premia dos veces.
         effective_explicit_tags = (
             explicit_tags - {"rpg"}
         )
@@ -921,8 +875,6 @@ class RecommendationEngine:
         ):
             score += 5
 
-        # Un cooperativo claro tiene prioridad
-        # frente a un co-op débil o secundario.
         if "co-op" in explicit_tags:
             coop_tier = self._coop_tier(
                 game_tags
@@ -984,7 +936,6 @@ class RecommendationEngine:
         if metacritic:
             score += metacritic / 20
 
-        # Penalizar ratings poco representativos.
         if ratings_count < 20:
             score -= 5
 
@@ -1006,9 +957,6 @@ class RecommendationEngine:
             reasons,
         )
 
-    # =========================================================
-    # RANKING FINAL
-    # =========================================================
 
     def rank_games(
         self,
@@ -1058,8 +1006,6 @@ class RecommendationEngine:
                 enriched_game
             )
 
-        # Cooperativo:
-        # priorizar señales claras de local u online co-op.
         if (
             "co-op"
             in request_data[

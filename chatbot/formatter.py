@@ -13,11 +13,6 @@ INTRO_MESSAGES = [
     "He encontrado algunos juegos interesantes para ti:",
 ]
 
-
-# =========================================================
-# UTILIDADES GENERALES
-# =========================================================
-
 def _clean_html(text):
     """
     Elimina etiquetas HTML y convierte entidades como:
@@ -198,9 +193,6 @@ def format_reasons_text(reasons):
     ) + "."
 
 
-# =========================================================
-# MENSAJES GENERALES
-# =========================================================
 
 def format_welcome_message():
     return (
@@ -277,10 +269,6 @@ def format_error_message(error):
     )
 
 
-# =========================================================
-# CATÁLOGOS RAWG
-# =========================================================
-
 def format_genres_list(genres):
     genres = sorted(
         genres,
@@ -321,11 +309,6 @@ def format_platforms_list(platforms):
         "Plataformas disponibles:\n\n"
         + "\n".join(lines)
     )
-
-
-# =========================================================
-# RECOMENDACIONES
-# =========================================================
 
 def format_game_card(
     game,
@@ -454,10 +437,6 @@ def format_game_list(
         + outro
     )
 
-
-# =========================================================
-# DETALLES DE UN JUEGO
-# =========================================================
 
 def format_game_details(details):
     """
