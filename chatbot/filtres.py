@@ -378,41 +378,34 @@ class FilterExtractor:
         return None
 
     def extract_search_candidate(self, text):
-        """
-        Intenta obtener el nombre del juego dentro de frases como:
-        - detalles de Minecraft
-        - explícame Stardew Valley
-        - guía de Portal 2
-        """
-
         cleanup_patterns = [
             r"\bdetalles?\b",
+            r"\bdetalle\b",
             r"\binfo\b",
             r"\binformacion\b",
             r"\bficha\b",
 
-            r"\bexplica\b",
-            r"\bexplicame\b",
-            r"\bensenam[e]?\b",
             r"\bguia\b",
-            r"\btutorial\b",
-            r"\bconsejos\b",
-            r"\btips\b",
+            r"\bconsejos?\b",
+            r"\btips?\b",
 
-            r"\bcomo\b",
-            r"\bjugar\b",
-            r"\bsobre\b",
+            r"\bdame\b",
             r"\bquiero\b",
-            r"\bsaber\b",
+            r"\bexplicame\b",
+            r"\bexplica\b",
+            r"\bde que trata\b",
+            r"\bcomo empezar\b",
+            r"\bayudame a empezar\b",
 
             r"\bdel\b",
             r"\bde\b",
-            r"\bal\b",
+            r"\bpara\b",
             r"\bel\b",
             r"\bla\b",
-
-            r"\bgame\b",
+            r"\bun\b",
+            r"\buna\b",
             r"\bjuego\b",
+            r"\bgame\b",
         ]
 
         candidate = text
@@ -430,7 +423,9 @@ class FilterExtractor:
             candidate,
         ).strip()
 
-        if len(candidate) < 2:
+        if len(
+                candidate
+        ) < 2:
             return None
 
         return candidate

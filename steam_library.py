@@ -476,13 +476,10 @@ class SteamLibraryManager:
                 )
 
             lines.append(
-                f"{index}. 🎮 "
-                f"{game.get('name', 'Sin nombre')}\n"
+                f"{index}. 🎮 {game.get('name', 'Sin nombre')}\n"
                 f"   • Horas jugadas en Steam: {hours}\n"
-                f"   • Rating RAWG: "
-                f"{game.get('rating', 'N/A')}\n"
-                f"   • Metacritic: "
-                f"{game.get('metacritic', 'N/A')}\n"
+                f"   • Rating RAWG: {game.get('rating') or 'No disponible'}\n"
+                f"   • Metacritic: {game.get('metacritic') or 'No disponible'}\n"
                 f"   • Géneros: {genres}\n"
                 f"{reasons_text}"
             )

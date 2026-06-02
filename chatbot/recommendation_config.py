@@ -1,180 +1,74 @@
-"""
-Configuración estática del recomendador.
-
-Este módulo contiene:
-- traducción de perfiles inferidos a filtros RAWG;
-- prioridades para resolver conflictos entre reglas;
-- alias y etiquetas legibles;
-- señales utilizadas por el ranking heurístico.
-
-No contiene lógica de ejecución.
-La lógica se implementa en recommendation_engine.py.
-"""
-
-
 # =========================================================
-# PERFILES DEL SISTEMA EXPERTO
-# =========================================================
-
-PROFILE_TO_RAWG = {
-    "perfil_chill_solitario": {
-        "genres": "indie,casual",
-        "tags": "singleplayer,relaxing",
-    },
-    "perfil_narrativo": {
-        "genres": "adventure,role-playing-games-rpg",
-        "tags": "story-rich,singleplayer",
-    },
-    "perfil_competitivo_online": {
-        "genres": "action,shooter",
-        "tags": "multiplayer,competitive",
-    },
-    "perfil_coop_relajado": {
-        "genres": "indie,casual",
-        "tags": "co-op,multiplayer,relaxing",
-    },
-    "perfil_terror_grupo": {
-        "genres": "action,indie",
-        "tags": "horror,co-op,multiplayer",
-    },
-    "perfil_estrategia_corta": {
-        "genres": "strategy",
-        "tags": "turn-based",
-    },
-    "perfil_accion_dificil": {
-        "genres": "action",
-        "tags": "difficult,souls-like",
-    },
-    "perfil_exploracion_solo": {
-        "genres": "adventure",
-        "tags": "open-world,singleplayer",
-    },
-    "perfil_terror_solo": {
-        "genres": "action,adventure",
-        "tags": "horror,singleplayer",
-    },
-    "perfil_accion_rapida": {
-        "genres": "action,indie",
-        "tags": "fast-paced,roguelike",
-    },
-    "perfil_exploracion_coop": {
-        "genres": "adventure",
-        "tags": "open-world,co-op",
-    },
-    "perfil_shooter_coop": {
-        "genres": "shooter",
-        "tags": "co-op",
-    },
-    "perfil_coop_historia": {
-        "genres": "adventure,role-playing-games-rpg",
-        "tags": "co-op,story-rich",
-    },
-    "perfil_estrategia_multi": {
-        "genres": "strategy",
-        "tags": "multiplayer",
-    },
-    "perfil_terror_rapido": {
-        "genres": "action",
-        "tags": "horror,fast-paced",
-    },
-    "perfil_accion_multi_rapido": {
-        "genres": "action",
-        "tags": "multiplayer,fast-paced",
-    },
-    "perfil_estrategia_chill": {
-        "genres": "strategy,casual",
-        "tags": "relaxing,singleplayer",
-    },
-    "perfil_estrategia_multi_rapida": {
-        "genres": "strategy",
-        "tags": "multiplayer,fast-paced",
-    },
-    "perfil_estrategia_multi_larga": {
-        "genres": "strategy",
-        "tags": "multiplayer,turn-based",
-    },
-    "perfil_accion_chill_multi": {
-        "genres": "action,casual",
-        "tags": "multiplayer,relaxing",
-    },
-}
-
-
-# =========================================================
-# PRIORIDADES PARA RESOLUCIÓN DE CONFLICTOS
-# =========================================================
-#
-# Cuando varias reglas deducen perfiles distintos:
-# 1. recommendation_engine / main compara especificidad;
-# 2. en caso de empate, utiliza estas prioridades.
-#
-# Cuanto mayor sea el número, mayor prioridad.
-# =========================================================
-
-PROFILE_PRIORITY = {
-    "perfil_competitivo_online": 100,
-    "perfil_terror_grupo": 95,
-    "perfil_coop_historia": 90,
-    "perfil_shooter_coop": 90,
-    "perfil_exploracion_coop": 85,
-    "perfil_estrategia_multi_rapida": 85,
-    "perfil_estrategia_multi_larga": 85,
-    "perfil_accion_multi_rapido": 80,
-    "perfil_coop_relajado": 80,
-    "perfil_accion_dificil": 75,
-    "perfil_terror_solo": 75,
-    "perfil_terror_rapido": 75,
-    "perfil_narrativo": 70,
-    "perfil_exploracion_solo": 70,
-    "perfil_accion_rapida": 65,
-    "perfil_estrategia_corta": 65,
-    "perfil_estrategia_chill": 65,
-    "perfil_accion_chill_multi": 60,
-    "perfil_chill_solitario": 50,
-}
-
-
-# =========================================================
-# PLATAFORMAS
-# =========================================================
-#
-# Los textos llegan normalmente preprocesados y sin acentos:
-# "móvil" → "movil"
+# PLATAFORMAS RAWG
 # =========================================================
 
 PLATFORM_MAP = {
-    "android": 21,
-    "mobile": 21,
-    "mobil": 21,
-    "movil": 21,
-
     "pc": 4,
-    "windows": 4,
-
-    "linux": 6,
-
     "playstation": 187,
-    "ps": 187,
-
+    "ps5": 187,
+    "ps4": 18,
     "xbox": 1,
-
+    "xbox one": 1,
+    "xbox series": 186,
+    "xbox series x": 186,
+    "xbox series s": 186,
     "switch": 7,
     "nintendo switch": 7,
+    "ios": 3,
+    "android": 21,
+    "movil": 21,
+    "móvil": 21,
+    "mac": 5,
+    "linux": 6,
 }
 
-
 PLATFORM_LABELS = {
-    21: "móvil",
     4: "PC",
-    6: "Linux",
-    187: "PlayStation",
-    1: "Xbox",
+    187: "PlayStation 5",
+    18: "PlayStation 4",
+    1: "Xbox One",
+    186: "Xbox Series S/X",
     7: "Nintendo Switch",
+    3: "iOS",
+    21: "Android",
+    5: "macOS",
+    6: "Linux",
 }
 
 
 # =========================================================
-# ETIQUETAS LEGIBLES PARA LAS EXPLICACIONES
+# ETIQUETAS IMPORTANTES
+# =========================================================
+
+COOP_TAGS = {
+    "co-op",
+    "online-co-op",
+    "local-co-op",
+    "couch-co-op",
+    "split-screen",
+}
+
+LOCAL_COOP_TAGS = {
+    "local-co-op",
+    "couch-co-op",
+    "split-screen",
+}
+
+MULTIPLAYER_TAGS = {
+    "multiplayer",
+    "online-co-op",
+    "local-co-op",
+    "co-op",
+    "massively-multiplayer",
+}
+
+HORROR_TAGS = {
+    "horror",
+    "survival-horror",
+}
+
+# =========================================================
+# ETIQUETAS UTILIZADAS POR EL MOTOR HEURÍSTICO
 # =========================================================
 
 GENRE_LABELS = {
@@ -187,11 +81,10 @@ GENRE_LABELS = {
     "sports": "deportes",
     "racing": "carreras",
     "shooter": "shooter",
+    "fighting": "lucha",
+    "platformer": "plataformas",
     "indie": "indie",
     "casual": "casual",
-    "fighting": "lucha",
-    "arcade": "arcade",
-    "platformer": "plataformas",
 }
 
 
@@ -200,36 +93,22 @@ TAG_REASON_LABELS = {
     "relaxing": "ofrece una experiencia relajada",
     "competitive": "está orientado a partidas competitivas",
     "multiplayer": "permite jugar con otras personas",
-
     "co-op": "incluye un modo cooperativo",
     "online-co-op": "permite cooperativo online",
     "local-co-op": "permite cooperativo local",
     "couch-co-op": "permite cooperativo local",
     "split-screen": "permite jugar a pantalla dividida",
-    "shared-split-screen": "permite compartir pantalla",
-
+    "shared-split-screen": "permite jugar a pantalla dividida",
+    "shared-split-screen-co-op": "permite cooperativo a pantalla dividida",
     "singleplayer": "se puede disfrutar en solitario",
     "horror": "encaja con una experiencia de terror",
+    "survival-horror": "encaja con una experiencia de terror",
     "difficult": "ofrece un reto elevado",
     "open-world": "permite explorar un mundo abierto",
     "souls-like": "tiene características souls-like",
     "fast-paced": "propone partidas de ritmo rápido",
-    "turn-based": "utiliza mecánicas por turnos",
-    "sandbox": "ofrece libertad de exploración y creación",
-    "survival": "incluye mecánicas de supervivencia",
 }
 
-
-# =========================================================
-# RESTRICCIONES OBLIGATORIAS
-# =========================================================
-#
-# Si el usuario pide explícitamente uno de estos tags,
-# el juego debe contenerlo para superar la poda inicial.
-#
-# co-op se trata por separado en recommendation_engine.py
-# para diferenciar cooperativo de multijugador genérico.
-# =========================================================
 
 STRICT_TAGS = {
     "story-rich",
@@ -242,15 +121,6 @@ STRICT_TAGS = {
 }
 
 
-# =========================================================
-# SEÑALES ADICIONALES DE COOPERATIVO
-# =========================================================
-#
-# Un juego con "co-op" obtiene nivel 1.
-# Si además tiene alguna de estas señales, obtiene nivel 2.
-# Esto ayuda a priorizar experiencias cooperativas claras.
-# =========================================================
-
 COOP_SUPPORT_TAGS = {
     "online-co-op",
     "local-co-op",
@@ -261,21 +131,8 @@ COOP_SUPPORT_TAGS = {
     "local-multiplayer",
 }
 
-
 # =========================================================
 # PRÓXIMOS LANZAMIENTOS
-# =========================================================
-#
-# ONLY_UNRELEASED_MARKERS:
-#   El usuario quiere exclusivamente títulos futuros.
-#
-# ALLOW_UNRELEASED_MARKERS:
-#   El usuario acepta mezclar títulos publicados y futuros.
-#
-# Importante:
-# recommendation_engine.py debe comprobar primero los marcadores
-# inclusivos para que "incluyendo próximos" no active por error
-# el modo exclusivo.
 # =========================================================
 
 ONLY_UNRELEASED_MARKERS = {
@@ -286,28 +143,124 @@ ONLY_UNRELEASED_MARKERS = {
     "futuros",
     "por salir",
     "upcoming",
-
-    # Catalán
-    "proper",
-    "propers",
-    "proxim",
-    "proxims",
-    "futur",
-    "futurs",
-    "per sortir",
 }
-
 
 ALLOW_UNRELEASED_MARKERS = {
     "incluyendo proximos",
     "incluye proximos",
     "tambien proximos",
     "tambien futuros",
-    "incluyendo futuros",
+    "publicados y futuros",
+}
 
-    # Catalán
-    "incloent proxims",
-    "inclou proxims",
-    "tambe proxims",
-    "tambe futurs",
+
+# =========================================================
+# PERFILES DEL SISTEMA EXPERTO
+# =========================================================
+
+PROFILE_TO_RAWG = {
+    "perfil_chill_solitario": {
+        "genres": ["indie", "casual"],
+        "tags": ["singleplayer", "relaxing"],
+    },
+    "perfil_narrativo": {
+        "genres": ["adventure", "role-playing-games-rpg"],
+        "tags": ["story-rich", "singleplayer"],
+    },
+    "perfil_competitivo_online": {
+        "genres": ["action", "shooter"],
+        "tags": ["multiplayer", "competitive"],
+    },
+    "perfil_coop_relajado": {
+        "genres": ["indie", "casual"],
+        "tags": ["co-op", "multiplayer", "relaxing"],
+    },
+    "perfil_terror_grupo": {
+        "genres": ["action", "indie"],
+        "tags": ["horror", "co-op", "multiplayer"],
+    },
+    "perfil_estrategia_corta": {
+        "genres": ["strategy"],
+        "tags": ["turn-based", "fast-paced"],
+    },
+    "perfil_accion_dificil": {
+        "genres": ["action"],
+        "tags": ["difficult", "souls-like"],
+    },
+    "perfil_exploracion_solo": {
+        "genres": ["adventure"],
+        "tags": ["open-world", "singleplayer"],
+    },
+    "perfil_terror_solo": {
+        "genres": ["action", "adventure"],
+        "tags": ["horror", "singleplayer"],
+    },
+    "perfil_accion_rapida": {
+        "genres": ["action", "indie"],
+        "tags": ["fast-paced", "roguelike"],
+    },
+    "perfil_exploracion_coop": {
+        "genres": ["adventure"],
+        "tags": ["open-world", "co-op"],
+    },
+    "perfil_shooter_coop": {
+        "genres": ["shooter"],
+        "tags": ["co-op"],
+    },
+    "perfil_coop_historia": {
+        "genres": ["adventure", "role-playing-games-rpg"],
+        "tags": ["co-op", "story-rich"],
+    },
+    "perfil_estrategia_multi": {
+        "genres": ["strategy"],
+        "tags": ["multiplayer"],
+    },
+    "perfil_terror_rapido": {
+        "genres": ["action"],
+        "tags": ["horror", "fast-paced"],
+    },
+    "perfil_accion_multi_rapido": {
+        "genres": ["action"],
+        "tags": ["multiplayer", "fast-paced"],
+    },
+    "perfil_estrategia_chill": {
+        "genres": ["strategy", "casual"],
+        "tags": ["relaxing", "singleplayer"],
+    },
+    "perfil_estrategia_multi_rapida": {
+        "genres": ["strategy"],
+        "tags": ["multiplayer", "fast-paced"],
+    },
+    "perfil_estrategia_multi_larga": {
+        "genres": ["strategy"],
+        "tags": ["multiplayer", "turn-based"],
+    },
+    "perfil_accion_chill_multi": {
+        "genres": ["action", "casual"],
+        "tags": ["multiplayer", "relaxing"],
+    },
+}
+
+
+PROFILE_PRIORITY = {
+    "perfil_shooter_coop": 100,
+    "perfil_coop_historia": 95,
+    "perfil_exploracion_coop": 90,
+    "perfil_estrategia_multi_rapida": 88,
+    "perfil_estrategia_multi_larga": 87,
+    "perfil_accion_multi_rapido": 85,
+    "perfil_accion_chill_multi": 84,
+    "perfil_terror_grupo": 82,
+    "perfil_terror_solo": 81,
+    "perfil_accion_dificil": 80,
+    "perfil_competitivo_online": 78,
+    "perfil_coop_relajado": 76,
+    "perfil_exploracion_solo": 74,
+    "perfil_narrativo": 72,
+    "perfil_chill_solitario": 70,
+    "perfil_estrategia_multi": 68,
+    "perfil_estrategia_chill": 66,
+    "perfil_estrategia_corta": 64,
+    "perfil_terror_rapido": 62,
+    "perfil_accion_rapida": 60,
 }
