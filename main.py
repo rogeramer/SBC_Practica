@@ -12,72 +12,31 @@ from steam_library import SteamLibraryManager
 
 from chatbot.intent_parser import detect_intent
 from chatbot.filtres import FilterExtractor
-from chatbot.recommendation_config import (
-    PLATFORM_MAP,
-    PROFILE_PRIORITY,
-)
-from chatbot.recommendation_engine import (
-    RecommendationEngine,
-)
-from chatbot.formatter import (
-    format_welcome_message,
-    format_help_message,
-    format_game_list,
-    format_game_details,
-    format_genres_list,
-    format_platforms_list,
-    format_reset_message,
-    format_goodbye_message,
-    format_no_results_message,
-    format_error_message,
-)
-
+from chatbot.recommendation_config import *
+from chatbot.recommendation_engine import *
+from chatbot.formatter import *
 
 class RawgGameChatbot:
-    """
-    Coordinador principal del chatbot.
-
-    Este archivo gestiona:
-    - conversación;
-    - memoria temporal;
-    - forward chaining;
-    - resolución de conflictos;
-    - selección del flujo RAWG o Steam.
-
-    El ranking heurístico se delega en RecommendationEngine.
-    """
-
     def __init__(self):
         self.rawg = RawgService()
         self.steam = SteamService()
-
         self.steam_library_manager = SteamLibraryManager(
             self.steam,
             self.rawg,
         )
-
         self.extractor = FilterExtractor(
             self.rawg
         )
-
         self.recommender = RecommendationEngine(
             self.rawg
         )
-
         self.profile_priority = PROFILE_PRIORITY
         self.platform_map = PLATFORM_MAP
-
         self.facts = set()
-
         self._load_knowledge_base()
         self.reset()
 
-
     def _load_knowledge_base(self):
-        """
-        Carga reglas, palabras clave y guías desde reglas.json.
-        """
-
         rules_path = (
             Path(__file__)
             .resolve()
@@ -110,7 +69,6 @@ class RawgGameChatbot:
                 [],
             )
         ]
-
         self.keyword_map = {
             self.extractor.preprocess_text(
                 phrase
@@ -120,7 +78,6 @@ class RawgGameChatbot:
                 {},
             ).items()
         }
-
         self.guides = {
             self.extractor.preprocess_text(
                 game_name
@@ -141,23 +98,14 @@ class RawgGameChatbot:
             games,
             append=False,
     ):
-        """
-        Guarda la última búsqueda para poder responder:
-        - dame otros cinco;
-        - más juegos;
-        - siguientes recomendaciones.
-        """
-
         self.context[
             "last_request_data"
         ] = deepcopy(
             request_data
         )
-
         self.context[
             "last_recommendation_source"
         ] = source
-
         previous_slugs = (
             self.context.get(
                 "excluded_game_slugs",
@@ -166,7 +114,6 @@ class RawgGameChatbot:
             if append
             else []
         )
-
         new_slugs = [
             game.get(
                 "slug"
@@ -176,7 +123,6 @@ class RawgGameChatbot:
                 "slug"
             )
         ]
-
         self.context[
             "excluded_game_slugs"
         ] = list(
@@ -187,38 +133,28 @@ class RawgGameChatbot:
         )
 
     def _recommend_more_results(self):
-        """
-        Recupera recomendaciones nuevas con los mismos filtros
-        utilizados en la búsqueda anterior.
-        """
-
         request_data = self.context.get(
             "last_request_data"
         )
-
         source = self.context.get(
             "last_recommendation_source"
         )
-
         if not request_data or not source:
             return (
                 "Todavía no tengo una búsqueda anterior. "
                 "Dime primero qué tipo de juego buscas."
             )
-
         excluded_slugs = set(
             self.context.get(
                 "excluded_game_slugs",
                 [],
             )
         )
-
         candidates = self.recommender.fetch_candidates(
             request_data=request_data,
             page_size=50,
             pages=5,
         )
-
         if source == "steam":
             candidates = (
                 self.steam_library_manager
@@ -242,18 +178,15 @@ class RawgGameChatbot:
                 "No he encontrado más juegos diferentes "
                 "con los mismos criterios."
             )
-
         self.context[
             "last_results"
         ] = games
-
         self._remember_recommendation(
             request_data=request_data,
             source=source,
             games=games,
             append=True,
         )
-
         if source == "steam":
             return (
                 self.steam_library_manager
@@ -261,26 +194,19 @@ class RawgGameChatbot:
                     games
                 )
             )
-
         return format_game_list(
             games,
             request_data,
         )
 
     def extract_facts(self, text):
-        """
-        Detecta hechos explícitos utilizando keyword_map.
-        """
-
         detected_facts = set()
-
         for phrase, fact in self.keyword_map.items():
             pattern = (
                 rf"(?<!\w)"
                 rf"{re.escape(phrase)}"
                 rf"(?!\w)"
             )
-
             if re.search(
                 pattern,
                 text,
@@ -290,71 +216,47 @@ class RawgGameChatbot:
         return detected_facts
 
     def forward_chaining(self):
-        """
-        Aplica reglas repetidamente hasta que no aparezcan
-        conclusiones nuevas.
-        """
-
         changed = True
-
         while changed:
             changed = False
-
             for rule in self.rules:
                 conditions = rule[
                     "conditions"
                 ]
-
                 conclusions = rule[
                     "conclusions"
                 ]
-
                 if not conditions.issubset(
                     self.facts
                 ):
                     continue
-
                 for conclusion in conclusions:
                     if conclusion not in self.facts:
                         self.facts.add(
                             conclusion
                         )
-
                         changed = True
 
     def _select_inferred_profile(self):
-        """
-        Resuelve conflictos entre perfiles aplicando:
-
-        1. especificidad;
-        2. prioridad manual;
-        3. orden estable.
-        """
-
         candidates = []
-
         for rule in self.rules:
             conditions = rule.get(
                 "conditions",
                 set(),
             )
-
             conclusions = rule.get(
                 "conclusions",
                 set(),
             )
-
             if not conditions.issubset(
                 self.facts
             ):
                 continue
-
             for conclusion in conclusions:
                 if not conclusion.startswith(
                     "perfil_"
                 ):
                     continue
-
                 candidates.append({
                     "profile": conclusion,
                     "specificity": len(
@@ -386,7 +288,6 @@ class RawgGameChatbot:
 
         if not candidates:
             return None
-
         candidates.sort(
             key=lambda candidate: (
                 candidate[
@@ -401,28 +302,19 @@ class RawgGameChatbot:
             ),
             reverse=True,
         )
-
         return candidates[0][
             "profile"
         ]
 
 
     def reset(self):
-        """
-        Reinicia la conversación completa.
-
-        También elimina la biblioteca Steam cargada.
-        """
-
         self.facts.clear()
-
         self.user_preferences = {
             "platform": None,
             "mode": None,
             "mood": None,
             "genre": None,
         }
-
         self.context = {
             "search": None,
             "genres": [],
@@ -451,10 +343,6 @@ class RawgGameChatbot:
         current_values,
         new_values,
     ):
-        """
-        Combina listas sin duplicados y conserva el orden.
-        """
-
         return list(
             dict.fromkeys(
                 current_values
@@ -463,10 +351,6 @@ class RawgGameChatbot:
         )
 
     def _update_context(self, filters):
-        """
-        Acumula filtros durante una conversación guiada.
-        """
-
         if filters.get("search"):
             self.context["search"] = filters[
                 "search"
@@ -483,7 +367,6 @@ class RawgGameChatbot:
                     ],
                 )
             )
-
         if filters.get("tags"):
             self.context["tags"] = (
                 self._merge_unique(
@@ -526,22 +409,12 @@ class RawgGameChatbot:
             ]
 
     def _clear_recommendation_preferences(self):
-        """
-        Limpia filtros temporales después de recomendar.
-
-        Mantiene:
-        - biblioteca Steam;
-        - SteamID;
-        - últimos resultados para pedir detalles.
-        """
-
         self.user_preferences = {
             "platform": None,
             "mode": None,
             "mood": None,
             "genre": None,
         }
-
         self.context["search"] = None
         self.context["genres"] = []
         self.context["tags"] = []
@@ -560,41 +433,26 @@ class RawgGameChatbot:
         text,
         phrases,
     ):
-        """
-        Comprueba expresiones completas.
-        """
-
         for phrase in phrases:
             pattern = (
                 rf"(?<!\w)"
                 rf"{re.escape(phrase)}"
                 rf"(?!\w)"
             )
-
             if re.search(
                 pattern,
                 text,
             ):
                 return True
-
         return False
 
     def _save_preferences(self, text):
-        """
-        Extrae filtros y preferencias conversacionales.
-
-        Devuelve los filtros para evitar procesar el texto
-        varias veces innecesariamente.
-        """
-
         filters = self.extractor.extract_filters(
             text
         )
-
         self._update_context(
             filters
         )
-
         if filters.get("platforms"):
             self.user_preferences[
                 "platform"
@@ -608,32 +466,27 @@ class RawgGameChatbot:
             ] = filters[
                 "genres"
             ][-1]
-
         tags = set(
             self.context[
                 "tags"
             ]
         )
-
         if "story-rich" in tags:
             self.facts.add(
                 "historia"
             )
-
         cooperative_tags = {
             "co-op",
             "online-co-op",
             "local-co-op",
             "split-screen",
         }
-
         if cooperative_tags.intersection(
             tags
         ):
             self.user_preferences[
                 "mode"
             ] = "co-op"
-
             if "co-op" not in self.context[
                 "tags"
             ]:
@@ -642,7 +495,6 @@ class RawgGameChatbot:
                 ].append(
                     "co-op"
                 )
-
             if "multiplayer" not in self.context[
                 "tags"
             ]:
@@ -655,11 +507,9 @@ class RawgGameChatbot:
             self.facts.add(
                 "multi"
             )
-
             self.facts.add(
                 "coop"
             )
-
         friend_words = [
             "amigo",
             "amigos",
@@ -668,7 +518,6 @@ class RawgGameChatbot:
             "friends",
             "friend",
         ]
-
         is_multiplayer = (
             "multiplayer" in tags
             or self._contains_any_phrase(
@@ -676,7 +525,6 @@ class RawgGameChatbot:
                 friend_words,
             )
         )
-
         if (
             is_multiplayer
             and self.user_preferences[
@@ -704,11 +552,9 @@ class RawgGameChatbot:
             self.user_preferences[
                 "mode"
             ] = "singleplayer"
-
             self.facts.add(
                 "solo"
             )
-
         if "relaxing" in tags:
             self.user_preferences[
                 "mood"
@@ -717,7 +563,6 @@ class RawgGameChatbot:
             self.facts.add(
                 "relajado"
             )
-
         if "competitive" in tags:
             self.user_preferences[
                 "mood"
@@ -726,7 +571,6 @@ class RawgGameChatbot:
             self.facts.add(
                 "competitivo"
             )
-
         if "difficult" in tags:
             self.user_preferences[
                 "mood"
@@ -735,18 +579,14 @@ class RawgGameChatbot:
             self.facts.add(
                 "dificil"
             )
-
         if "horror" in tags:
             self.facts.add(
                 "miedo"
             )
-
         if "open-world" in tags:
             self.facts.add(
                 "explorar"
             )
-
-
         open_answers = [
             "me da igual",
             "da igual",
@@ -754,7 +594,6 @@ class RawgGameChatbot:
             "no importa",
             "whatever",
         ]
-
         if self._contains_any_phrase(
             text,
             open_answers,
@@ -766,33 +605,24 @@ class RawgGameChatbot:
             self.context[
                 "platforms"
             ] = [4]
-
         return filters
 
     def can_recommend_now(
         self,
         steam_mode=False,
     ):
-        """
-        Determina si ya hay suficientes pistas.
-        """
-
         genre = self.user_preferences[
             "genre"
         ]
-
         mode = self.user_preferences[
             "mode"
         ]
-
         mood = self.user_preferences[
             "mood"
         ]
-
         platform = self.user_preferences[
             "platform"
         ]
-
         strong_tags = {
             "story-rich",
             "horror",
@@ -805,7 +635,6 @@ class RawgGameChatbot:
             "local-co-op",
             "split-screen",
         }
-
         detected_strong_tags = (
             strong_tags.intersection(
                 set(
@@ -815,45 +644,33 @@ class RawgGameChatbot:
                 )
             )
         )
-
         if genre:
             return True
-
         if mood:
             return True
-
         if detected_strong_tags:
             return True
-
         if (
             not steam_mode
             and mode
             and platform
         ):
             return True
-
         return False
 
     def ask_for_missing_info(
         self,
         steam_mode=False,
     ):
-        """
-        Formula una única pregunta relevante.
-        """
-
         genre = self.user_preferences[
             "genre"
         ]
-
         mode = self.user_preferences[
             "mode"
         ]
-
         mood = self.user_preferences[
             "mood"
         ]
-
         if (
             mode == "multiplayer"
             and not mood
@@ -864,14 +681,12 @@ class RawgGameChatbot:
                 "con otras personas? Por ejemplo: cooperativa, "
                 "competitiva, relajada o difícil."
             )
-
         if not genre and not mood:
             return (
                 "¿Qué tipo de experiencia buscas? "
                 "Por ejemplo: RPG, acción, estrategia, terror, "
                 "algo relajado, competitivo o difícil."
             )
-
         if (
             not steam_mode
             and not self.user_preferences[
@@ -883,46 +698,33 @@ class RawgGameChatbot:
                 "También puedes indicarme una concreta: PC, móvil, "
                 "PlayStation, Xbox o Switch."
             )
-
         return None
-
 
     def _recommend_general_from_preferences(
         self,
         clean_text,
         filters=None,
     ):
-        """
-        Recomienda juegos generales utilizando el motor heurístico.
-        """
-
         if filters is None:
             filters = self._save_preferences(
                 clean_text
             )
-
         filters = dict(
             filters
         )
-
         filters["search"] = None
-
         self._update_context(
             filters
         )
-
         self.facts.update(
             self.extract_facts(
                 clean_text
             )
         )
-
         self.forward_chaining()
-
         profile = (
             self._select_inferred_profile()
         )
-
         request_data = (
             self.recommender.build_request(
                 clean_text=clean_text,
@@ -931,47 +733,38 @@ class RawgGameChatbot:
                 profile=profile,
             )
         )
-
         candidates = (
             self.recommender.fetch_candidates(
                 request_data=request_data,
                 page_size=40,
             )
         )
-
         games = self.recommender.rank_games(
             games=candidates,
             request_data=request_data,
             limit=5,
         )
-
         self.context[
             "last_results"
         ] = games
-
         self._remember_recommendation(
             request_data=request_data,
             source="rawg",
             games=games,
             append=False,
         )
-
         if not games:
             response = (
                 format_no_results_message()
             )
-
             self._clear_recommendation_preferences()
-
             return response
 
         response = format_game_list(
             games,
             request_data,
         )
-
         self._clear_recommendation_preferences()
-
         return response
 
     def _extract_steamid(self, text):
@@ -979,7 +772,6 @@ class RawgGameChatbot:
             r"\b\d{17}\b",
             text,
         )
-
         return (
             match.group(0)
             if match
@@ -990,17 +782,12 @@ class RawgGameChatbot:
         self,
         steamid,
     ):
-        """
-        Carga y almacena una biblioteca Steam pública.
-        """
-
         library_result = (
             self.steam_library_manager
             .load_library(
                 steamid
             )
         )
-
         if library_result[
             "status"
         ] != "ok":
@@ -1023,7 +810,6 @@ class RawgGameChatbot:
             return library_result[
                 "message"
             ]
-
         games = library_result[
             "games"
         ]
@@ -1048,7 +834,6 @@ class RawgGameChatbot:
                 games
             )
         )
-
         return (
             self.steam_library_manager
             .format_library_loaded_message(
@@ -1063,10 +848,6 @@ class RawgGameChatbot:
         self,
         text,
     ):
-        """
-        Detecta consultas limitadas a la biblioteca personal.
-        """
-
         library_markers = [
             "mi biblioteca",
             "de mi biblioteca",
@@ -1077,7 +858,6 @@ class RawgGameChatbot:
             "que ya poseo",
             "recomiendame algo que ya tengo",
         ]
-
         return any(
             marker in text
             for marker in library_markers
@@ -1088,10 +868,6 @@ class RawgGameChatbot:
         clean_text,
         filters=None,
     ):
-        """
-        Recomienda únicamente juegos poseídos por el usuario.
-        """
-
         if not self.context[
             "steam_library_loaded"
         ]:
@@ -1105,45 +881,35 @@ class RawgGameChatbot:
         self.context[
             "steam_recommendation_mode"
         ] = True
-
         if filters is None:
             filters = self._save_preferences(
                 clean_text
             )
-
         filters = dict(
             filters
         )
-
         filters["search"] = None
         filters["platforms"] = []
-
         self.context["search"] = None
         self.context["platforms"] = []
-
         self._update_context(
             filters
         )
-
         if not self.can_recommend_now(
             steam_mode=True
         ):
             return self.ask_for_missing_info(
                 steam_mode=True
             )
-
         self.facts.update(
             self.extract_facts(
                 clean_text
             )
         )
-
         self.forward_chaining()
-
         profile = (
             self._select_inferred_profile()
         )
-
         request_data = (
             self.recommender.build_request(
                 clean_text=clean_text,
@@ -1152,18 +918,15 @@ class RawgGameChatbot:
                 profile=profile,
             )
         )
-
         request_data[
             "explicit_platforms"
         ] = set()
-
         candidates = (
             self.recommender.fetch_candidates(
                 request_data=request_data,
                 page_size=60,
             )
         )
-
         owned_games = (
             self.steam_library_manager
             .filter_owned_games_from_rawg_results(
@@ -1173,7 +936,6 @@ class RawgGameChatbot:
                 ],
             )
         )
-
         ranked_owned_games = (
             self.recommender.rank_games(
                 games=owned_games,
@@ -1181,7 +943,6 @@ class RawgGameChatbot:
                 limit=5,
             )
         )
-
         ranked_owned_games.sort(
             key=lambda game: (
                 game.get(
@@ -1195,37 +956,29 @@ class RawgGameChatbot:
             ),
             reverse=True,
         )
-
         self.context[
             "last_results"
         ] = ranked_owned_games
-
         self._remember_recommendation(
             request_data=request_data,
             source="steam",
             games=ranked_owned_games,
             append=False,
         )
-
         response = (
             self.steam_library_manager
             .format_library_recommendations(
                 ranked_owned_games
             )
         )
-
         self._clear_recommendation_preferences()
-
         return response
+
 
     def _format_most_played_games(
         self,
         limit=10,
     ):
-        """
-        Devuelve un ranking de horas jugadas.
-        """
-
         games = sorted(
             self.context[
                 "steam_library"
@@ -1236,17 +989,14 @@ class RawgGameChatbot:
             ),
             reverse=True,
         )[:limit]
-
         if not games:
             return (
                 "No he encontrado juegos "
                 "en tu biblioteca."
             )
-
         lines = [
             "🎮 Tus juegos más jugados son:\n"
         ]
-
         for index, game in enumerate(
             games,
             start=1,
@@ -1258,13 +1008,11 @@ class RawgGameChatbot:
                 ) / 60,
                 1,
             )
-
             lines.append(
                 f"{index}. "
                 f"{game.get('name', 'Sin nombre')} "
                 f"({hours} horas)"
             )
-
         return "\n".join(
             lines
         )
@@ -1279,10 +1027,8 @@ class RawgGameChatbot:
                 text
             )
         )
-
         if index is None:
             return None
-
         if not self.context[
             "last_results"
         ]:
@@ -1290,9 +1036,7 @@ class RawgGameChatbot:
                 "No tengo resultados anteriores. "
                 "Haz primero una búsqueda."
             )
-
         result_index = index - 1
-
         if (
             result_index < 0
             or result_index
@@ -1306,21 +1050,17 @@ class RawgGameChatbot:
                 "Ese número no corresponde "
                 "a ningún juego de la última búsqueda."
             )
-
         game = self.context[
             "last_results"
         ][result_index]
-
         details = self.rawg.get_game_details(
             game["slug"]
         )
-
         self.context[
             "last_game_slug"
         ] = details.get(
             "slug"
         )
-
         return format_game_details(
             details
         )
@@ -1337,20 +1077,17 @@ class RawgGameChatbot:
             "NFKD",
             name,
         )
-
         name = name.encode(
             "ascii",
             "ignore",
         ).decode(
             "ascii"
         )
-
         name = re.sub(
             r"[^a-z0-9\s]",
             " ",
             name,
         )
-
         return re.sub(
             r"\s+",
             " ",
@@ -1361,29 +1098,21 @@ class RawgGameChatbot:
             self,
             candidate,
     ):
-        """
-        Prioriza coincidencias exactas antes de aceptar
-        aproximaciones.
-        """
-
         result = self.rawg.search_games(
             search=candidate,
             page_size=10,
             search_precise=True,
             search_exact=True,
         )
-
         games = result.get(
             "results",
             [],
         )
-
         normalized_candidate = (
             self._normalize_game_name(
                 candidate
             )
         )
-
         for game in games:
             if (
                     self._normalize_game_name(
@@ -1394,22 +1123,18 @@ class RawgGameChatbot:
                     == normalized_candidate
             ):
                 return game
-
         result = self.rawg.search_games(
             search=candidate,
             page_size=10,
             search_precise=True,
             search_exact=False,
         )
-
         games = result.get(
             "results",
             [],
         )
-
         best_game = None
         best_score = 0
-
         for game in games:
             normalized_name = (
                 self._normalize_game_name(
@@ -1418,20 +1143,17 @@ class RawgGameChatbot:
                     )
                 )
             )
-
             score = SequenceMatcher(
                 None,
                 normalized_candidate,
                 normalized_name,
             ).ratio()
-
             if score > best_score:
                 best_game = game
                 best_score = score
 
         if best_score >= 0.80:
             return best_game
-
         return None
 
     def _details_from_name(
@@ -1450,13 +1172,11 @@ class RawgGameChatbot:
                 "Dime el nombre del juego "
                 "del que quieres saber más."
             )
-
         normalized_candidate = (
             self._normalize_game_name(
                 candidate
             )
         )
-
         for game in self.context.get(
                 "last_results",
                 [],
@@ -1468,7 +1188,6 @@ class RawgGameChatbot:
                     )
                 )
             )
-
             if (
                     normalized_candidate
                     == normalized_name
@@ -1478,76 +1197,56 @@ class RawgGameChatbot:
                         "slug"
                     ]
                 )
-
                 self.context[
                     "last_game_slug"
                 ] = details.get(
                     "slug"
                 )
-
                 return format_game_details(
                     details
                 )
-
         game = self._find_best_rawg_match(
             candidate
         )
-
         if not game:
             return (
                 "No he encontrado ningún juego "
                 f"que coincida claramente con '{candidate}'."
             )
-
         details = self.rawg.get_game_details(
             game[
                 "slug"
             ]
         )
-
         self.context[
             "last_game_slug"
         ] = details.get(
             "slug"
         )
-
         return format_game_details(
             details
         )
-
 
     def _format_tips(
         self,
         clean_text,
     ):
-        """
-        Muestra una guía almacenada en reglas.json.
-
-        Admite:
-        - listas de consejos;
-        - diccionarios con secciones;
-        - textos simples.
-        """
-
         candidate = (
             self.extractor
             .extract_search_candidate(
                 clean_text
             )
         )
-
         if not candidate:
             return (
                 "¿De qué juego quieres una guía?"
             )
-
         candidate = (
             self.extractor
             .preprocess_text(
                 candidate
             )
         )
-
         for guide_key, guide_data in self.guides.items():
             if (
                 guide_key in candidate
@@ -1575,7 +1274,6 @@ class RawgGameChatbot:
                     dict,
                 ):
                     sections = []
-
                     for (
                         section_name,
                         section_content,
@@ -1583,7 +1281,6 @@ class RawgGameChatbot:
                         sections.append(
                             f"\n{section_name.replace('_', ' ').title()}:"
                         )
-
                         if isinstance(
                             section_content,
                             list,
@@ -1592,75 +1289,56 @@ class RawgGameChatbot:
                                 f"• {item}"
                                 for item in section_content
                             )
-
                         else:
                             sections.append(
                                 str(
                                     section_content
                                 )
                             )
-
                     formatted_content = "\n".join(
                         sections
                     )
-
                 else:
                     formatted_content = str(
                         content
                     )
-
                 return (
                     f"🎮 Consejos iniciales para {title}:\n\n"
                     f"{formatted_content}"
                 )
-
         return (
             "No tengo consejos almacenados "
             f"para '{candidate}'."
         )
 
-
     def _format_top_mobile_games(self):
-        """
-        Devuelve un ranking sencillo para móvil.
-        """
-
         result = self.rawg.search_games(
             platforms="21",
             ordering="-added",
             page_size=5,
         )
-
         games = result.get(
             "results",
             [],
         )
-
         self.context[
             "last_results"
         ] = games
-
         safe_context = {
             "genres": [],
             "tags": [],
             "platforms": [21],
             "ordering": "-added",
         }
-
         return format_game_list(
             games,
             safe_context,
         )
 
-
     def respond(
         self,
         user_input,
     ):
-        """
-        Procesa un mensaje y devuelve una respuesta.
-        """
-
         try:
             clean_text = (
                 self.extractor
@@ -1668,15 +1346,12 @@ class RawgGameChatbot:
                     user_input
                 )
             )
-
             intent = detect_intent(
                 clean_text
             )
-
             steamid = self._extract_steamid(
                 clean_text
             )
-
             if (
                 steamid
                 and "steam" in clean_text
@@ -1686,44 +1361,35 @@ class RawgGameChatbot:
                         steamid
                     )
                 )
-
                 if not self.context[
                     "steam_library_loaded"
                 ]:
                     return load_message
-
                 if intent == "most_played":
                     return (
                         f"{load_message}\n\n"
                         f"{self._format_most_played_games()}"
                     )
-
                 if self._is_library_query(
                     clean_text
                 ):
                     self._clear_recommendation_preferences()
-
                     recommendation = (
                         self._recommend_from_steam_library(
                             clean_text
                         )
                     )
-
                     return (
                         f"{load_message}\n\n"
                         f"{recommendation}"
                     )
-
                 return load_message
-
-            # SteamID inválido.
             steam_commands = [
                 "cargar steam",
                 "carga steam",
                 "conectar steam",
                 "steamid",
             ]
-
             if (
                 self._contains_any_phrase(
                     clean_text,
@@ -1737,40 +1403,31 @@ class RawgGameChatbot:
                     "Usa algo como:\n"
                     "• cargar steam 7656119XXXXXXXXXX"
                 )
-
             if intent == "greeting":
                 return format_welcome_message()
-
             if intent == "farewell":
                 return format_goodbye_message()
-
             if intent == "reset":
                 self.reset()
-
                 return format_reset_message()
-
             if intent == "genres":
                 return format_genres_list(
                     self.rawg.get_genres(
                         page_size=50
                     )
                 )
-
             if intent == "platforms":
                 return format_platforms_list(
                     self.rawg.get_platforms(
                         page_size=50
                     )
                 )
-
             if intent == "help":
                 return format_help_message()
-
             if intent == "tips":
                 return self._format_tips(
                     clean_text
                 )
-
             if intent in {
                 "guide",
                 "details",
@@ -1778,14 +1435,11 @@ class RawgGameChatbot:
                 result = self._details_from_index(
                     clean_text
                 )
-
                 if result:
                     return result
-
                 return self._details_from_name(
                     clean_text
                 )
-
 
             if intent == "most_played":
                 if not self.context[
@@ -1796,39 +1450,27 @@ class RawgGameChatbot:
                         "Ejemplo:\n"
                         "• cargar steam 7656119XXXXXXXXXX"
                     )
-
                 return self._format_most_played_games()
-
-
-
-
             if intent == "top_games":
                 return self._format_top_mobile_games()
-
-
             if self._is_library_query(
                 clean_text
             ):
                 self._clear_recommendation_preferences()
-
                 return self._recommend_from_steam_library(
                     clean_text
                 )
-
             if intent == "more_results":
                 return self._recommend_more_results()
-
             if self.context[
                 "steam_recommendation_mode"
             ]:
                 return self._recommend_from_steam_library(
                     clean_text
                 )
-
             filters = self._save_preferences(
                 clean_text
             )
-
             if self.can_recommend_now(
                 steam_mode=False
             ):
@@ -1838,7 +1480,6 @@ class RawgGameChatbot:
                         filters=filters,
                     )
                 )
-
             has_any_preference = any([
                 self.user_preferences[
                     "platform"
@@ -1859,7 +1500,6 @@ class RawgGameChatbot:
                     "genres"
                 ],
             ])
-
             if not has_any_preference:
                 return (
                     "¿Qué tipo de experiencia buscas? 🤔\n\n"
@@ -1870,11 +1510,9 @@ class RawgGameChatbot:
                     "• Quiero un juego de terror\n"
                     "• Recomiéndame algo de mi biblioteca"
                 )
-
             return self.ask_for_missing_info(
                 steam_mode=False
             )
-
         except Exception as error:
             return format_error_message(
                 str(error)

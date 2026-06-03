@@ -125,17 +125,13 @@
             >
                 <div class="message bot">
                     <div class="avatar">🤖</div>
-
                     <div class="bubble">
                         ¡Hola! Soy tu asistente de videojuegos.
-                        
                         Puedes pedirme recomendaciones personalizadas, próximos lanzamientos, información detallada de un título o consejos iniciales para algunos juegos.
-
                         También puedo analizar tu biblioteca pública de Steam si cargas un SteamID64.
                     </div>
                 </div>
             </div>
-
             <form
                 class="chat-input-area"
                 onsubmit="handleSubmit(event)"
@@ -146,7 +142,6 @@
                     placeholder="Escribe aquí... Ejemplo: quiero un RPG con historia para PC"
                     autocomplete="off"
                 >
-
                 <button
                     type="submit"
                     id="send-btn"
@@ -156,7 +151,6 @@
             </form>
         </section>
     </main>
-
     <script>
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
@@ -165,18 +159,13 @@
         function addMessage(sender, text) {
             const message = document.createElement("div");
             message.className = `message ${sender}`;
-
             const avatar = document.createElement("div");
             avatar.className = "avatar";
             avatar.textContent = sender === "bot" ? "🤖" : "🧑";
 
             const bubble = document.createElement("div");
             bubble.className = "bubble";
-
-            // Evita interpretar HTML introducido por el usuario.
-            // Los saltos de línea se respetan mediante CSS.
             bubble.textContent = text;
-
             message.appendChild(avatar);
             message.appendChild(bubble);
 
@@ -191,17 +180,13 @@
 
         async function sendMessage() {
             const message = userInput.value.trim();
-
             if (!message) {
                 return;
             }
-
             addMessage("user", message);
-
             userInput.value = "";
             sendBtn.disabled = true;
             sendBtn.textContent = "Enviando...";
-
             try {
                 const response = await fetch("/chat", {
                     method: "POST",
@@ -212,24 +197,19 @@
                         message
                     })
                 });
-
                 if (!response.ok) {
                     throw new Error("Respuesta no válida del servidor");
                 }
-
                 const data = await response.json();
-
                 addMessage(
                     "bot",
                     data.response
                 );
-
             } catch (error) {
                 addMessage(
                     "bot",
                     "Ha ocurrido un problema al conectar con el servidor."
                 );
-
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.textContent = "Enviar";
@@ -242,20 +222,15 @@
                 const response = await fetch("/reset", {
                     method: "POST"
                 });
-
                 if (!response.ok) {
                     throw new Error("No se ha podido reiniciar");
                 }
-
                 const data = await response.json();
-
                 chatBox.innerHTML = "";
-
                 addMessage(
                     "bot",
                     data.response
                 );
-
             } catch (error) {
                 addMessage(
                     "bot",

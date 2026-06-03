@@ -1,7 +1,6 @@
 import re
 import unicodedata
 
-
 INTENT_KEYWORDS = [
     (
         "reset",

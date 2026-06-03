@@ -10,22 +10,11 @@ DEFAULT_TIMEOUT = 15
 
 
 class SteamService:
-    """
-    Servicio encargado de comunicarse con la Steam Web API.
-
-    Su responsabilidad es:
-    - validar el SteamID64;
-    - consultar la biblioteca pública del usuario;
-    - normalizar los datos recibidos;
-    - devolver mensajes claros cuando Steam no está disponible.
-    """
-
     def __init__(self, api_key=None, timeout=DEFAULT_TIMEOUT):
         self.api_key = (
             api_key
             or os.getenv("STEAM_API_KEY", "").strip()
         )
-
         self.timeout = timeout
         self.session = requests.Session()
 
@@ -35,12 +24,6 @@ class SteamService:
         })
 
     def _get(self, endpoint, params=None):
-        """
-        Realiza una petición GET a Steam y devuelve el JSON recibido.
-
-        Se utiliza una copia del diccionario de parámetros para evitar
-        modificar accidentalmente los datos enviados por otros módulos.
-        """
 
         if not self.api_key:
             raise RuntimeError(
@@ -89,11 +72,6 @@ class SteamService:
             ) from error
 
     def is_valid_steamid64(self, steamid):
-        """
-        Comprueba que el identificador tenga el formato básico
-        esperado para un SteamID64.
-        """
-
         return (
             isinstance(steamid, str)
             and steamid.isdigit()
@@ -105,23 +83,6 @@ class SteamService:
         steamid,
         include_played_free_games=True,
     ):
-        """
-        Obtiene la biblioteca visible de un usuario de Steam.
-
-        Devuelve un diccionario normalizado:
-
-        {
-            "status": "ok"
-                      | "missing_key"
-                      | "invalid_id"
-                      | "not_accessible"
-                      | "service_error",
-            "games": [...],
-            "game_count": int,
-            "message": str
-        }
-        """
-
         if not self.api_key:
             return {
                 "status": "missing_key",
@@ -166,11 +127,9 @@ class SteamService:
                 "game_count": 0,
                 "message": str(error),
             }
-
         response = data.get("response", {})
         games = response.get("games", [])
         game_count = response.get("game_count", 0)
-
         if not games:
             return {
                 "status": "not_accessible",
@@ -183,12 +142,10 @@ class SteamService:
                     "no sean públicos, o a que no haya juegos visibles."
                 ),
             }
-
         normalized_games = [
             self._normalize_game(game)
             for game in games
         ]
-
         return {
             "status": "ok",
             "games": normalized_games,
@@ -200,10 +157,6 @@ class SteamService:
         }
 
     def _normalize_game(self, game):
-        """
-        Selecciona únicamente los datos necesarios para el chatbot.
-        """
-
         return {
             "appid": game.get("appid"),
             "name": game.get("name", "Unknown"),
@@ -231,8 +184,4 @@ class SteamService:
         }
 
     def close(self):
-        """
-        Cierra la sesión HTTP cuando deje de utilizarse el servicio.
-        """
-
         self.session.close()

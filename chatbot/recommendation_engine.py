@@ -14,41 +14,19 @@ from chatbot.recommendation_config import (
 
 
 class RecommendationEngine:
-    """
-    Motor heurístico de recomendación.
-
-    Responsabilidades:
-    - construir una petición estructurada;
-    - recuperar candidatos desde RAWG;
-    - aplicar restricciones obligatorias;
-    - diferenciar cooperativo de multijugador genérico;
-    - ordenar candidatos mediante una puntuación heurística;
-    - generar explicaciones comprensibles.
-    """
 
     def __init__(self, rawg_service):
         self.rawg = rawg_service
 
-
-
     def _split_csv_values(self, value):
-        """
-        Convierte:
-            "action,rpg"
-        en:
-            {"action", "rpg"}
-        """
-
         if not value:
             return set()
-
         if isinstance(value, str):
             return {
                 item.strip().lower()
                 for item in value.split(",")
                 if item.strip()
             }
-
         return {
             str(item).strip().lower()
             for item in value
@@ -70,61 +48,41 @@ class RecommendationEngine:
         }
 
     def _get_game_platform_ids(self, game):
-        """
-        Recoge plataformas concretas y plataformas padre.
-        """
-
         platform_ids = set()
-
         for item in game.get("platforms", []):
             platform_id = item.get(
                 "platform",
                 {},
             ).get("id")
-
             if platform_id is not None:
                 platform_ids.add(platform_id)
-
         for item in game.get("parent_platforms", []):
             platform_id = item.get(
                 "platform",
                 {},
             ).get("id")
-
             if platform_id is not None:
                 platform_ids.add(platform_id)
-
         return platform_ids
-
 
     def _get_release_date(self, game):
         released = game.get("released")
-
         if not released:
             return None
-
         try:
             return date.fromisoformat(released)
-
         except ValueError:
             return None
 
     def _is_released_game(self, game):
         release_date = self._get_release_date(game)
-
         return (
             release_date is not None
             and release_date <= date.today()
         )
 
     def _is_upcoming_game(self, game):
-        """
-        Los juegos sin fecha confirmada también se consideran
-        próximos lanzamientos.
-        """
-
         release_date = self._get_release_date(game)
-
         if release_date is None:
             return True
 
@@ -137,24 +95,10 @@ class RecommendationEngine:
         )
 
     def _get_release_mode(self, clean_text):
-        """
-        Distingue entre tres situaciones:
-
-        1. Solo juegos publicados:
-           "Quiero un RPG"
-
-        2. Solo próximos lanzamientos:
-           "Quiero próximos RPG"
-
-        3. Publicados y futuros:
-           "Quiero RPG incluyendo próximos"
-        """
-
         allow_mixed_releases = self._contains_marker(
             clean_text,
             ALLOW_UNRELEASED_MARKERS,
         )
-
         only_unreleased = (
             not allow_mixed_releases
             and self._contains_marker(
@@ -162,18 +106,15 @@ class RecommendationEngine:
                 ONLY_UNRELEASED_MARKERS,
             )
         )
-
         allow_unreleased = (
             only_unreleased
             or allow_mixed_releases
         )
-
         return {
             "allow_unreleased": allow_unreleased,
             "only_unreleased": only_unreleased,
             "allow_mixed_releases": allow_mixed_releases,
         }
-
 
     def _label_genre(self, slug):
         return GENRE_LABELS.get(
@@ -187,7 +128,6 @@ class RecommendationEngine:
             for platform_id in platform_ids
             if PLATFORM_LABELS.get(platform_id)
         ]
-
         return ", ".join(
             sorted(labels)
         )
@@ -196,20 +136,7 @@ class RecommendationEngine:
         if reason and reason not in reasons:
             reasons.append(reason)
 
-
     def _coop_tier(self, game_tags):
-        """
-        Nivel 0:
-            no consta cooperativo.
-
-        Nivel 1:
-            RAWG incluye únicamente el tag genérico co-op.
-
-        Nivel 2:
-            existen señales adicionales:
-            online-co-op, local-co-op, split-screen...
-        """
-
         if "co-op" not in game_tags:
             return 0
 
@@ -220,7 +147,6 @@ class RecommendationEngine:
 
         return 1
 
-
     def build_request(
         self,
         clean_text,
@@ -228,14 +154,6 @@ class RecommendationEngine:
         context,
         profile=None,
     ):
-        """
-        Construye una petición estructurada combinando:
-
-        - filtros escritos por el usuario;
-        - preferencias acumuladas en la conversación;
-        - perfil inferido mediante forward chaining.
-        """
-
         profile_params = (
             PROFILE_TO_RAWG.get(
                 profile,
@@ -340,27 +258,19 @@ class RecommendationEngine:
             "profile": profile,
         }
 
-
     def _merge_unique_games(
         self,
         *game_lists,
     ):
-        """
-        Une resultados RAWG evitando duplicados.
-        """
-
         merged = {}
-
         for games in game_lists:
             for game in games:
                 key = (
                     game.get("slug")
                     or str(game.get("id"))
                 )
-
                 if key:
                     merged[key] = game
-
         return list(
             merged.values()
         )
@@ -373,12 +283,8 @@ class RecommendationEngine:
         common_params,
         pages,
     ):
-        """
-        Consulta una o varias páginas RAWG.
-        """
 
         collected_games = []
-
         for page in pages:
             result = self.rawg.search_games(
                 genres=genres,
@@ -386,7 +292,6 @@ class RecommendationEngine:
                 page=page,
                 **common_params,
             )
-
             collected_games = (
                 self._merge_unique_games(
                     collected_games,
@@ -404,15 +309,6 @@ class RecommendationEngine:
         request_data,
         page_size=40,
     ):
-        """
-        Recupera candidatos en varias etapas:
-
-        1. búsqueda precisa con géneros y tags;
-        2. ampliación sin tags;
-        3. ampliación sin géneros.
-
-        Las restricciones obligatorias se aplican después.
-        """
 
         genres_for_api = (
             request_data["explicit_genres"]
@@ -518,7 +414,6 @@ class RecommendationEngine:
                     broad_games,
                 )
             )
-
         return collected_games
 
 
@@ -527,12 +422,6 @@ class RecommendationEngine:
         game,
         request_data,
     ):
-        """
-        Descarta candidatos incompatibles con la petición.
-
-        Las preferencias explícitas son obligatorias.
-        Las inferidas por perfil solo influyen en la puntuación.
-        """
 
         game_genres = self._get_game_genres(
             game
@@ -624,9 +513,6 @@ class RecommendationEngine:
         game,
         request_data,
     ):
-        """
-        Construye hasta tres explicaciones breves.
-        """
 
         reasons = []
 
@@ -764,7 +650,6 @@ class RecommendationEngine:
                         ]
                     )
                 )
-
                 self._append_reason(
                     reasons,
                     (
@@ -801,13 +686,6 @@ class RecommendationEngine:
         game,
         request_data,
     ):
-        """
-        Calcula la puntuación de compatibilidad.
-
-        Las preferencias explícitas pesan más que
-        las preferencias inferidas y que la popularidad.
-        """
-
         score = 0.0
 
         game_genres = self._get_game_genres(
@@ -964,10 +842,6 @@ class RecommendationEngine:
         request_data,
         limit=5,
     ):
-        """
-        Aplica restricciones y devuelve los mejores candidatos.
-        """
-
         ranked_games = []
 
         for game in games:
@@ -1033,7 +907,6 @@ class RecommendationEngine:
                 ),
                 reverse=True,
             )
-
         else:
             ranked_games.sort(
                 key=lambda game: (

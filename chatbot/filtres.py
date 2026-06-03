@@ -3,23 +3,9 @@ import unicodedata
 
 
 class FilterExtractor:
-    """
-    Extrae filtros RAWG a partir del texto escrito por el usuario.
-
-    Responsabilidades:
-    - normalizar el texto;
-    - detectar géneros;
-    - detectar etiquetas;
-    - detectar plataformas;
-    - detectar ordenación;
-    - detectar años y rangos de Metacritic;
-    - inferir búsquedas por nombre cuando no hay filtros explícitos.
-    """
-
     def __init__(self, rawg_service):
         self.rawg = rawg_service
 
-        # Catálogos reales obtenidos desde RAWG.
         self.genres_catalog = self.rawg.get_genres(
             page_size=50
         )
@@ -46,8 +32,6 @@ class FilterExtractor:
             )
         )
 
-
-
         self.order_keywords = {
             "mejor valorados": "-rating",
             "mejor valorado": "-rating",
@@ -68,8 +52,6 @@ class FilterExtractor:
             "antiguos": "released",
         }
 
-
-
         self.platform_aliases = {
             "nintendo switch": 7,
             "switch": 7,
@@ -88,21 +70,16 @@ class FilterExtractor:
             "mobile": 21,
             "mobil": 21,
             "movil": 21,
-
             "ios": 3,
             "iphone": 3,
             "ipad": 3,
 
             "windows": 4,
             "pc": 4,
-
             "macos": 5,
             "mac": 5,
-
             "linux": 6,
         }
-
-
 
         self.tag_aliases = {
             "cooperativo online": "online-co-op",
@@ -175,7 +152,6 @@ class FilterExtractor:
             "turn based": "turn-based",
         }
 
-
         self.genre_aliases = {
             "rpg": "role-playing-games-rpg",
             "rol": "role-playing-games-rpg",
@@ -217,36 +193,22 @@ class FilterExtractor:
 
 
     def preprocess_text(self, text):
-        """
-        Normaliza el texto del usuario.
-
-        Ejemplos:
-        - "Móvil" → "movil"
-        - "Acción" → "accion"
-        - "Co-op" → "co-op"
-        """
-
         text = str(text or "").lower()
-
         text = unicodedata.normalize(
             "NFKD",
             text,
         )
-
         text = text.encode(
             "ascii",
             "ignore",
         ).decode(
             "ascii"
         )
-
-
         text = re.sub(
             r"[^\w\s\-]",
             " ",
             text,
         )
-
         return re.sub(
             r"\s+",
             " ",
@@ -254,20 +216,11 @@ class FilterExtractor:
         ).strip()
 
     def _contains_phrase(self, text, phrase):
-        """
-        Comprueba si una palabra o expresión aparece completa.
-
-        Evita falsos positivos como:
-        - "pc" dentro de otra palabra;
-        - "ios" dentro de "curiosos".
-        """
-
         pattern = (
             rf"(?<!\w)"
             rf"{re.escape(phrase)}"
             rf"(?!\w)"
         )
-
         return bool(
             re.search(
                 pattern,
@@ -275,70 +228,48 @@ class FilterExtractor:
             )
         )
 
-
     def _build_lookup(self, items):
         lookup = {}
-
         for item in items:
             slug = self.preprocess_text(
                 item.get("slug", "")
             )
-
             name = self.preprocess_text(
                 item.get("name", "")
             )
-
             if slug:
                 lookup[slug] = item
-
             if name:
                 lookup[name] = item
-
         return lookup
 
     def _build_platform_lookup(self, items):
         lookup = {}
-
         for item in items:
             platform_id = item.get("id")
-
             name = self.preprocess_text(
                 item.get("name", "")
             )
-
             slug = self.preprocess_text(
                 item.get("slug", "")
             )
-
             if platform_id is not None:
                 lookup[str(platform_id)] = item
-
             if name:
                 lookup[name] = item
-
             if slug:
                 lookup[slug] = item
-
         return lookup
 
-
     def extract_index_reference(self, text):
-        """
-        Extrae referencias como:
-        - detalles del 1
-        - información del 3
-        """
-
         match = re.search(
             r"\b(\d+)\b",
             text,
         )
-
         if match:
             return int(
                 match.group(1)
             )
-
         return None
 
     def extract_search_candidate(self, text):
@@ -371,53 +302,31 @@ class FilterExtractor:
             r"\bjuego\b",
             r"\bgame\b",
         ]
-
         candidate = text
-
         for pattern in cleanup_patterns:
             candidate = re.sub(
                 pattern,
                 " ",
                 candidate,
             )
-
         candidate = re.sub(
             r"\s+",
             " ",
             candidate,
         ).strip()
-
         if len(
                 candidate
         ) < 2:
             return None
-
         return candidate
 
-
     def extract_filters(self, text):
-        """
-        Devuelve un diccionario compatible con RAWG:
-
-        {
-            "search": None | str,
-            "genres": [...],
-            "tags": [...],
-            "platforms": [...],
-            "ordering": None | str,
-            "dates": None | str,
-            "metacritic": None | str,
-        }
-        """
-
         text = self.preprocess_text(
             text
         )
-
         genres = []
         tags = []
         platforms = []
-
         for key, item in self.genre_lookup.items():
             if (
                 key
@@ -427,10 +336,8 @@ class FilterExtractor:
                 )
             ):
                 slug = item.get("slug")
-
                 if slug and slug not in genres:
                     genres.append(slug)
-
         for alias, slug in sorted(
             self.genre_aliases.items(),
             key=lambda item: len(item[0]),
@@ -444,7 +351,6 @@ class FilterExtractor:
                 and slug not in genres
             ):
                 genres.append(slug)
-
         for key, item in self.tag_lookup.items():
             if (
                 key
@@ -457,7 +363,6 @@ class FilterExtractor:
 
                 if slug and slug not in tags:
                     tags.append(slug)
-
         for alias, slug in sorted(
             self.tag_aliases.items(),
             key=lambda item: len(item[0]),
@@ -489,7 +394,6 @@ class FilterExtractor:
                 )
 
         ordering = None
-
         for key, value in sorted(
             self.order_keywords.items(),
             key=lambda item: len(item[0]),
@@ -501,14 +405,11 @@ class FilterExtractor:
             ):
                 ordering = value
                 break
-
         dates = None
-
         year_match = re.search(
             r"\b(20\d{2})\b",
             text,
         )
-
         if year_match:
             year = year_match.group(1)
 
@@ -516,24 +417,19 @@ class FilterExtractor:
                 f"{year}-01-01,"
                 f"{year}-12-31"
             )
-
-        # Metacritic.
         metacritic = None
-
         if re.search(
             r"\bmetacritic\s+"
             r"(alto|alta|bueno|buena)\b",
             text,
         ):
             metacritic = "80,100"
-
         search = self._infer_search_text(
             text,
             genres,
             tags,
             platforms,
         )
-
         return {
             "search": search,
             "genres": genres,
@@ -544,7 +440,6 @@ class FilterExtractor:
             "metacritic": metacritic,
         }
 
-
     def _infer_search_text(
         self,
         text,
@@ -552,11 +447,6 @@ class FilterExtractor:
         tags,
         platforms,
     ):
-        """
-        Si no hay filtros explícitos, intenta interpretar
-        el texto restante como el nombre de un juego.
-        """
-
         generic_words = {
             "quiero",
             "busco",
@@ -605,25 +495,18 @@ class FilterExtractor:
             "futuros",
             "upcoming",
         }
-
         tokens = [
             token
             for token in text.split()
             if token not in generic_words
         ]
-
-
         if genres or tags or platforms:
             return None
-
         if not tokens:
             return None
-
         candidate = " ".join(
             tokens[:8]
         ).strip()
-
         if len(candidate) < 2:
             return None
-
         return candidate

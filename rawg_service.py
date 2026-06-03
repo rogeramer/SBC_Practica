@@ -9,15 +9,7 @@ load_dotenv()
 BASE_URL = "https://api.rawg.io/api"
 DEFAULT_TIMEOUT = 15
 
-
 class RawgService:
-    """
-    Servicio encargado de comunicarse con la API de RAWG.
-
-    Centraliza todas las peticiones HTTP para evitar que el resto
-    de módulos tenga que conocer URLs, claves o detalles técnicos.
-    """
-
     def __init__(self, api_key=None, timeout=DEFAULT_TIMEOUT):
         self.api_key = (
             api_key
@@ -38,13 +30,6 @@ class RawgService:
         })
 
     def _get(self, endpoint, params=None):
-        """
-        Realiza una petición GET a RAWG y devuelve el JSON recibido.
-
-        Se crea una copia del diccionario para evitar modificar
-        accidentalmente los parámetros originales.
-        """
-
         request_params = dict(params or {})
         request_params["key"] = self.api_key
 
@@ -86,10 +71,6 @@ class RawgService:
             ) from error
 
     def _get_results(self, endpoint, params=None):
-        """
-        Devuelve únicamente la lista `results` de una respuesta RAWG.
-        """
-
         data = self._get(endpoint, params)
         return data.get("results", [])
 
@@ -139,13 +120,6 @@ class RawgService:
         search_exact=False,
         search_precise=False,
     ):
-        """
-        Busca videojuegos aplicando filtros opcionales.
-
-        Devuelve la respuesta RAWG completa porque algunos módulos
-        pueden necesitar metadatos adicionales además de `results`.
-        """
-
         params = {
             "page": page,
             "page_size": page_size,
@@ -182,10 +156,6 @@ class RawgService:
         )
 
     def get_game_details(self, slug):
-        """
-        Obtiene la ficha detallada de un videojuego.
-        """
-
         safe_slug = quote(
             str(slug),
             safe="",
@@ -196,26 +166,14 @@ class RawgService:
         )
 
     def get_game_screenshots(self, game_id):
-        """
-        Obtiene capturas de pantalla de un videojuego.
-        """
-
         return self._get_results(
             f"/games/{game_id}/screenshots"
         )
 
     def get_game_trailers(self, game_id):
-        """
-        Obtiene vídeos o tráileres asociados a un videojuego.
-        """
-
         return self._get_results(
             f"/games/{game_id}/movies"
         )
 
     def close(self):
-        """
-        Cierra la sesión HTTP cuando deje de utilizarse el servicio.
-        """
-
         self.session.close()

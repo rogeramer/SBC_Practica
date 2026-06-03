@@ -6,7 +6,6 @@ from chatbot.recommendation_config import (
     PLATFORM_LABELS,
 )
 
-
 INTRO_MESSAGES = [
     "Perfecto, creo que estos juegos te pueden gustar:",
     "Basado en lo que buscas, te recomiendo:",
@@ -14,11 +13,6 @@ INTRO_MESSAGES = [
 ]
 
 def _clean_html(text):
-    """
-    Elimina etiquetas HTML y convierte entidades como:
-    &amp; → &
-    """
-
     if not text:
         return ""
 
@@ -36,23 +30,12 @@ def _clean_html(text):
 
 
 def _display_value(value, fallback="No disponible"):
-    """
-    Evita mostrar valores poco claros como:
-    None
-    ""
-    """
-
     if value is None or value == "":
         return fallback
 
     return value
 
-
 def _join_names(items, limit=None):
-    """
-    Extrae nombres de listas RAWG de forma segura.
-    """
-
     if limit is not None:
         items = items[:limit]
 
@@ -66,12 +49,7 @@ def _join_names(items, limit=None):
         names
     )
 
-
 def _join_store_names(stores, limit=None):
-    """
-    Extrae nombres de tiendas RAWG de forma segura.
-    """
-
     if limit is not None:
         stores = stores[:limit]
 
@@ -92,12 +70,7 @@ def _join_store_names(stores, limit=None):
         names
     )
 
-
 def _join_game_platform_names(game, limit=5):
-    """
-    Devuelve las plataformas reales disponibles para un juego.
-    """
-
     names = []
 
     for item in game.get(
@@ -118,17 +91,7 @@ def _join_game_platform_names(game, limit=5):
         names
     )
 
-
 def _format_selected_platforms(context):
-    """
-    Si el usuario ha solicitado una plataforma concreta,
-    devuelve una etiqueta legible.
-
-    Admite tanto:
-    - context["explicit_platforms"]
-    - context["platforms"]
-    """
-
     if not context:
         return ""
 
@@ -151,21 +114,7 @@ def _format_selected_platforms(context):
         sorted(labels)
     )
 
-
 def format_reasons_text(reasons):
-    """
-    Convierte una lista de razones breves en una frase natural.
-
-    Ejemplo:
-    [
-        "pertenece al género RPG",
-        "tiene una historia destacada"
-    ]
-
-    Resultado:
-    "Pertenece al género RPG. Tiene una historia destacada."
-    """
-
     cleaned_reasons = []
 
     for reason in reasons:
@@ -192,8 +141,6 @@ def format_reasons_text(reasons):
         cleaned_reasons
     ) + "."
 
-
-
 def format_welcome_message():
     return (
         "¡Hola! Soy tu chatbot de videojuegos con RAWG.\n\n"
@@ -210,7 +157,6 @@ def format_welcome_message():
         "• géneros\n"
         "• plataformas"
     )
-
 
 def format_help_message():
     return (
@@ -231,20 +177,17 @@ def format_help_message():
         "• dime mis juegos más jugados"
     )
 
-
 def format_goodbye_message():
     return (
         "¡Hasta luego! "
         "Cuando quieras vuelvo a buscarte juegos."
     )
 
-
 def format_reset_message():
     return (
         "Contexto reiniciado. "
         "Dime qué tipo de juego quieres buscar."
     )
-
 
 def format_no_results_message():
     return (
@@ -256,18 +199,11 @@ def format_no_results_message():
         "• cooperativos para jugar con amigos"
     )
 
-
 def format_error_message(error):
-    """
-    Mensaje genérico porque el error puede proceder
-    de RAWG, Steam o de otra parte del chatbot.
-    """
-
     return (
         "Ha ocurrido un error al procesar la consulta: "
         f"{error}"
     )
-
 
 def format_genres_list(genres):
     genres = sorted(
@@ -289,7 +225,6 @@ def format_genres_list(genres):
         + "\n".join(lines)
     )
 
-
 def format_platforms_list(platforms):
     platforms = sorted(
         platforms,
@@ -298,7 +233,6 @@ def format_platforms_list(platforms):
             "",
         ).lower(),
     )
-
     lines = [
         f"• {platform.get('name', 'Sin nombre')} "
         f"(id {platform.get('id', 'N/A')})"
@@ -315,36 +249,27 @@ def format_game_card(
     context=None,
     index=None,
 ):
-    """
-    Formatea una recomendación individual.
-    """
-
     number = (
         f"{index}. "
         if index is not None
         else ""
     )
-
     name = _display_value(
         game.get("name"),
         "Sin nombre",
     )
-
     released = _display_value(
         game.get("released"),
         "Sin fecha confirmada",
     )
-
     rating = _display_value(
         game.get("rating"),
         "No disponible",
     )
-
     metacritic = _display_value(
         game.get("metacritic"),
         "No disponible",
     )
-
     genres = (
         _join_names(
             game.get(
@@ -355,13 +280,11 @@ def format_game_card(
         )
         or "Sin género"
     )
-
     selected_platforms = (
         _format_selected_platforms(
             context
         )
     )
-
     if selected_platforms:
         platforms = selected_platforms
 
@@ -373,21 +296,17 @@ def format_game_card(
             )
             or "Sin plataforma"
         )
-
     reasons = game.get(
         "_recommendation_reasons",
         [],
     )
-
     reasons_text = ""
-
     if reasons:
         reasons_text = (
             "\n"
             "   • Por qué encaja: "
             f"{format_reasons_text(reasons)}"
         )
-
     return (
         f"{number}🎮 {name}\n"
         f"   • Lanzamiento: {released}\n"
@@ -398,22 +317,15 @@ def format_game_card(
         f"{reasons_text}"
     )
 
-
 def format_game_list(
     games,
     context,
 ):
-    """
-    Formatea una lista de recomendaciones.
-    """
-
     if not games:
         return format_no_results_message()
-
     intro = random.choice(
         INTRO_MESSAGES
     )
-
     cards = "\n\n".join(
         format_game_card(
             game,
@@ -424,12 +336,10 @@ def format_game_list(
             games
         )
     )
-
     outro = (
         "\n\n¿Quieres que te explique "
         "de qué trata alguno?"
     )
-
     return (
         intro
         + "\n\n"
@@ -437,12 +347,7 @@ def format_game_list(
         + outro
     )
 
-
 def format_game_details(details):
-    """
-    Formatea la ficha completa obtenida desde RAWG.
-    """
-
     genres = (
         _join_names(
             details.get(
@@ -452,7 +357,6 @@ def format_game_details(details):
         )
         or "Sin datos"
     )
-
     tags = (
         _join_names(
             details.get(
@@ -463,7 +367,6 @@ def format_game_details(details):
         )
         or "Sin datos"
     )
-
     developers = (
         _join_names(
             details.get(
@@ -473,7 +376,6 @@ def format_game_details(details):
         )
         or "Sin datos"
     )
-
     publishers = (
         _join_names(
             details.get(
@@ -483,7 +385,6 @@ def format_game_details(details):
         )
         or "Sin datos"
     )
-
     stores = (
         _join_store_names(
             details.get(
@@ -494,13 +395,11 @@ def format_game_details(details):
         )
         or "Sin datos"
     )
-
     description = _clean_html(
         details.get("description_raw")
         or details.get("description")
         or ""
     )
-
     if len(description) > 900:
         description = (
             description[:900]
@@ -508,7 +407,7 @@ def format_game_details(details):
         )
 
     return (
-        f"📘 {_display_value(details.get('name'), 'Juego')}\n\n"
+        f"{_display_value(details.get('name'), 'Juego')}\n\n"
         f"• Lanzamiento: "
         f"{_display_value(details.get('released'), 'Sin fecha confirmada')}\n"
         f"• Rating RAWG: "
