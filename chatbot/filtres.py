@@ -243,6 +243,7 @@ class FilterExtractor:
                 lookup[name] = item
         return lookup
 
+
     def _build_platform_lookup(self, items):
         lookup = {}
         for item in items:
@@ -261,62 +262,131 @@ class FilterExtractor:
                 lookup[slug] = item
         return lookup
 
-    def extract_index_reference(self, text):
+    def extract_index_reference(
+        self,
+        text,
+    ):
         match = re.search(
             r"\b(\d+)\b",
             text,
         )
-        if match:
-            return int(
-                match.group(1)
-            )
-        return None
+
+        if not match:
+            return None
+
+        return int(
+            match.group(1)
+        )
+
+    def references_last_result(self, text):
+        last_result_markers = [
+            "ultimo",
+            "ultima",
+            "el ultimo",
+            "la ultima",
+            "ultimo juego",
+            "ultima recomendacion",
+            "el ultimo juego",
+            "el ultimo recomendado",
+            "el ultimo que has recomendado",
+            "el ultimo que me has recomendado",
+        ]
+
+        return any(
+            marker in text
+            for marker in last_result_markers
+        )
+
+    def extract_index_reference(
+        self,
+        text,
+    ):
+        match = re.search(
+            r"\b(\d+)\b",
+            text,
+        )
+        if not match:
+            return None
+        return int(
+            match.group(1)
+        )
+
+    def references_last_result(self, text):
+        last_result_markers = [
+            "ultimo",
+            "ultima",
+            "el ultimo",
+            "la ultima",
+            "ultimo juego",
+            "ultima recomendacion",
+            "el ultimo juego",
+            "el ultimo recomendado",
+            "el ultimo que has recomendado",
+            "el ultimo que me has recomendado",
+        ]
+        return any(
+            marker in text
+            for marker in last_result_markers
+        )
 
     def extract_search_candidate(self, text):
+        candidate = self.preprocess_text(
+            text
+        )
         cleanup_patterns = [
-            r"\bdetalles?\b",
-            r"\bdetalle\b",
-            r"\binfo\b",
-            r"\binformacion\b",
-            r"\bficha\b",
+            r"^quiero que me expliques de que trata\s+",
+            r"^quiero que me expliques\s+",
+            r"^quiero saber de que trata\s+",
+            r"^explicame de que trata\s+",
+            r"^explica de que trata\s+",
+            r"^dime de que trata\s+",
+            r"^de que trata\s+",
 
-            r"\bguia\b",
-            r"\bconsejos?\b",
-            r"\btips?\b",
+            r"^dame una guia de\s+",
+            r"^dame una guia del\s+",
+            r"^quiero una guia de\s+",
+            r"^quiero una guia del\s+",
+            r"^guia de\s+",
+            r"^guia del\s+",
 
-            r"\bdame\b",
-            r"\bquiero\b",
-            r"\bexplicame\b",
-            r"\bexplica\b",
-            r"\bde que trata\b",
-            r"\bcomo empezar\b",
-            r"\bayudame a empezar\b",
+            r"^quiero informacion de\s+",
+            r"^quiero informacion del\s+",
+            r"^informacion de\s+",
+            r"^informacion del\s+",
+            r"^info de\s+",
+            r"^info del\s+",
 
-            r"\bdel\b",
-            r"\bde\b",
-            r"\bpara\b",
-            r"\bel\b",
-            r"\bla\b",
-            r"\bun\b",
-            r"\buna\b",
-            r"\bjuego\b",
-            r"\bgame\b",
+            r"^quiero detalles de\s+",
+            r"^quiero detalles del\s+",
+            r"^detalles de\s+",
+            r"^detalles del\s+",
+            r"^detalle de\s+",
+            r"^detalle del\s+",
+
+            r"^explicame\s+",
+            r"^explica\s+",
+            r"^dime\s+",
+            r"^muestrame\s+",
         ]
-        candidate = text
-        for pattern in cleanup_patterns:
-            candidate = re.sub(
-                pattern,
-                " ",
-                candidate,
+        changed = True
+        while changed:
+            previous_candidate = candidate
+            for pattern in cleanup_patterns:
+                candidate = re.sub(
+                    pattern,
+                    "",
+                    candidate,
+                ).strip()
+            changed = (
+                    previous_candidate
+                    != candidate
             )
         candidate = re.sub(
             r"\s+",
             " ",
             candidate,
         ).strip()
-        if len(
-                candidate
-        ) < 2:
+        if len(candidate) < 2:
             return None
         return candidate
 

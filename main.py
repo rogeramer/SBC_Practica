@@ -1020,7 +1020,7 @@ class RawgGameChatbot:
     def _details_from_index(
         self,
         text,
-    ):
+    ): #puedo eliminar
         index = (
             self.extractor
             .extract_index_reference(
@@ -1155,6 +1155,66 @@ class RawgGameChatbot:
         if best_score >= 0.80:
             return best_game
         return None
+
+    def _details_from_reference(self, text):
+        index = self.extractor.extract_index_reference(
+            text
+        )
+        wants_last_result = (
+            self.extractor.references_last_result(
+                text
+            )
+        )
+        if (
+            index is None
+            and not wants_last_result
+        ):
+            return None
+        last_results = self.context.get(
+            "last_results",
+            [],
+        )
+        if not last_results:
+            return (
+                "Todavía no tengo recomendaciones anteriores. "
+                "Pídeme primero algún tipo de juego."
+            )
+        if wants_last_result:
+            game = last_results[-1]
+        else:
+            selected_index = index - 1
+            if (
+                    selected_index < 0
+                    or selected_index >= len(
+                last_results
+            )
+            ):
+                return (
+                    "Ese número no corresponde a ninguno "
+                    "de los juegos de la última recomendación."
+                )
+            game = last_results[
+                selected_index
+            ]
+        slug = game.get(
+            "slug"
+        )
+        if not slug:
+            return (
+                "No he podido recuperar la información "
+                "de ese juego."
+            )
+        details = self.rawg.get_game_details(
+            slug
+        )
+        self.context[
+            "last_game_slug"
+        ] = details.get(
+            "slug"
+        )
+        return format_game_details(
+            details
+        )
 
     def _details_from_name(
             self,
@@ -1432,11 +1492,13 @@ class RawgGameChatbot:
                 "guide",
                 "details",
             }:
-                result = self._details_from_index(
+                result = self._details_from_reference(
                     clean_text
                 )
+
                 if result:
                     return result
+
                 return self._details_from_name(
                     clean_text
                 )
