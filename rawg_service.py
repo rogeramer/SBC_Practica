@@ -57,9 +57,17 @@ class RawgService:
             ) from error
 
         if not response.ok:
+            safe_params = {
+                key: value
+                for key, value in request_params.items()
+                if key != "key"
+            }
+
             raise RuntimeError(
                 "RAWG ha devuelto un error "
-                f"HTTP {response.status_code}."
+                f"HTTP {response.status_code}. "
+                f"Endpoint: {endpoint}. "
+                f"Parámetros: {safe_params}"
             )
 
         try:
@@ -139,7 +147,7 @@ class RawgService:
             params["platforms"] = platforms
 
         if dates:
-            params["dates"] = dates
+            params["dates"] = str(dates).strip().replace("}", "")
 
         if metacritic:
             params["metacritic"] = metacritic

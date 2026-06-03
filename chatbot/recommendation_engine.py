@@ -12,11 +12,13 @@ from chatbot.recommendation_config import (
     TAG_REASON_LABELS,
 )
 
-
 class RecommendationEngine:
 
     def __init__(self, rawg_service):
         self.rawg = rawg_service
+
+    def _as_list(self, value):
+        return value if isinstance(value, list) else []
 
     def _split_csv_values(self, value):
         if not value:
@@ -36,33 +38,52 @@ class RecommendationEngine:
     def _get_game_genres(self, game):
         return {
             genre.get("slug", "").lower()
-            for genre in game.get("genres", [])
-            if genre.get("slug")
+            for genre in self._as_list(
+                game.get("genres")
+            )
+            if (
+                    isinstance(genre, dict)
+                    and genre.get("slug")
+            )
         }
 
     def _get_game_tags(self, game):
         return {
             tag.get("slug", "").lower()
-            for tag in game.get("tags", [])
-            if tag.get("slug")
+            for tag in self._as_list(
+                game.get("tags")
+            )
+            if (
+                    isinstance(tag, dict)
+                    and tag.get("slug")
+            )
         }
 
     def _get_game_platform_ids(self, game):
         platform_ids = set()
-        for item in game.get("platforms", []):
-            platform_id = item.get(
-                "platform",
-                {},
-            ).get("id")
-            if platform_id is not None:
-                platform_ids.add(platform_id)
-        for item in game.get("parent_platforms", []):
-            platform_id = item.get(
-                "platform",
-                {},
-            ).get("id")
-            if platform_id is not None:
-                platform_ids.add(platform_id)
+        platform_groups = [
+            self._as_list(
+                game.get("platforms")
+            ),
+            self._as_list(
+                game.get("parent_platforms")
+            ),
+        ]
+        for group in platform_groups:
+            for item in group:
+                if not isinstance(item, dict):
+                    continue
+                platform_data = (
+                        item.get("platform")
+                        or {}
+                )
+                platform_id = platform_data.get(
+                    "id"
+                )
+                if platform_id is not None:
+                    platform_ids.add(
+                        platform_id
+                    )
         return platform_ids
 
     def _get_release_date(self, game):
@@ -204,30 +225,25 @@ class RecommendationEngine:
         release_mode = self._get_release_mode(
             clean_text
         )
+        dates = filters.get("dates")
 
-        dates = (
-            filters.get("dates")
-            or context.get("dates")
-        )
-
-        if (
-            release_mode["only_unreleased"]
-            and not dates
-        ):
+        if (release_mode["only_unreleased"] and not dates):
             tomorrow = (
-                date.today()
-                + timedelta(days=1)
+                    date.today()
+                    + timedelta(days=1)
             )
-
             future_limit = (
-                date.today()
-                + timedelta(days=365 * 8)
+                    date.today()
+                    + timedelta(days=365 * 4)
             )
 
             dates = (
                 f"{tomorrow.isoformat()},"
                 f"{future_limit.isoformat()}"
             )
+
+        if dates:
+            dates = str(dates).strip().replace("}", "")
 
         return {
             "search": filters.get("search"),
@@ -237,9 +253,13 @@ class RecommendationEngine:
             "profile_genres": profile_genres,
             "profile_tags": profile_tags,
             "ordering": (
-                filters.get("ordering")
-                or context.get("ordering")
-                or "-added"
+                "released"
+                if release_mode["only_unreleased"]
+                else (
+                    filters.get("ordering")
+                    or context.get("ordering")
+                    or "-added"
+                )
             ),
             "dates": dates,
             "metacritic": (
@@ -259,15 +279,20 @@ class RecommendationEngine:
         }
 
     def _merge_unique_games(
-        self,
-        *game_lists,
+            self,
+            *game_lists,
     ):
         merged = {}
         for games in game_lists:
-            for game in games:
+            for game in games or []:
+                if not isinstance(game, dict):
+                    continue
                 key = (
-                    game.get("slug")
-                    or str(game.get("id"))
+                        game.get("slug")
+                        or str(
+                    game.get("id")
+                    or ""
+                )
                 )
                 if key:
                     merged[key] = game
@@ -276,48 +301,51 @@ class RecommendationEngine:
         )
 
     def _search_pages(
-        self,
-        *,
-        genres,
-        tags,
-        common_params,
-        pages,
+            self,
+            *,
+            genres,
+            tags,
+            common_params,
+            pages,
     ):
-
         collected_games = []
         for page in pages:
-            result = self.rawg.search_games(
-                genres=genres,
-                tags=tags,
-                page=page,
-                **common_params,
-            )
-            collected_games = (
-                self._merge_unique_games(
-                    collected_games,
-                    result.get(
-                        "results",
-                        [],
-                    ),
+            try:
+                result = self.rawg.search_games(
+                    genres=genres,
+                    tags=tags,
+                    page=page,
+                    **common_params,
                 )
+            except RuntimeError as error:
+                if (
+                        page > 1
+                        and "HTTP 404" in str(error)
+                ):
+                    break
+                raise
+            collected_games = self._merge_unique_games(
+                collected_games,
+                result.get("results") or [],
             )
-
+            if not result.get("next"):
+                break
         return collected_games
 
     def fetch_candidates(
-        self,
-        request_data,
-        page_size=40,
+            self,
+            request_data,
+            page_size=40,
+            pages=None,
     ):
-
         genres_for_api = (
-            request_data["explicit_genres"]
-            or request_data["profile_genres"]
+                request_data["explicit_genres"]
+                or request_data["profile_genres"]
         )
 
         tags_for_api = (
-            request_data["explicit_tags"]
-            or request_data["profile_tags"]
+                request_data["explicit_tags"]
+                or request_data["profile_tags"]
         )
 
         platforms_for_api = request_data[
@@ -358,36 +386,42 @@ class RecommendationEngine:
             else None
         )
 
-        pages = (
-            [1, 2]
-            if (
-                "co-op"
-                in request_data[
-                    "explicit_tags"
-                ]
-                or request_data[
-                    "only_unreleased"
-                ]
+        pages_to_fetch = pages
+
+        if pages_to_fetch is None:
+            pages_to_fetch = (
+                [1, 2]
+                if (
+                        "co-op" in request_data["explicit_tags"]
+                        or request_data["only_unreleased"]
+                )
+                else [1]
             )
-            else [1]
-        )
+
+        if isinstance(
+                pages_to_fetch,
+                int,
+        ):
+            pages_to_fetch = [
+                pages_to_fetch
+            ]
 
         collected_games = self._search_pages(
             genres=genres,
             tags=tags,
             common_params=common_params,
-            pages=pages,
+            pages=pages_to_fetch,
         )
 
         if (
-            tags
-            and len(collected_games) < 25
+                tags
+                and len(collected_games) < 25
         ):
             expanded_games = self._search_pages(
                 genres=genres,
                 tags=None,
                 common_params=common_params,
-                pages=pages,
+                pages=pages_to_fetch,
             )
 
             collected_games = (
@@ -398,8 +432,8 @@ class RecommendationEngine:
             )
 
         if (
-            genres
-            and len(collected_games) < 25
+                genres
+                and len(collected_games) < 25
         ):
             broad_games = self._search_pages(
                 genres=None,
@@ -414,8 +448,8 @@ class RecommendationEngine:
                     broad_games,
                 )
             )
-        return collected_games
 
+        return collected_games
 
     def _matches_mandatory_constraints(
         self,
@@ -803,30 +837,24 @@ class RecommendationEngine:
             ),
             8,
         ) * 1.2
-
         score += min(
             math.log1p(
                 added
             ),
             10,
         ) * 0.8
-
         if metacritic:
             score += metacritic / 20
-
         if ratings_count < 20:
             score -= 5
-
         if ratings_count < 5:
             score -= 5
-
         reasons = (
             self._build_natural_reasons(
                 game=game,
                 request_data=request_data,
             )
         )
-
         return (
             round(
                 score,
@@ -835,39 +863,44 @@ class RecommendationEngine:
             reasons,
         )
 
-
     def rank_games(
         self,
         games,
         request_data,
         limit=5,
+        excluded_slugs=None,
     ):
+        excluded_slugs = set(
+            excluded_slugs or []
+        )
         ranked_games = []
-
         for game in games:
+            if not isinstance(game, dict):
+                continue
+            game_slug = game.get("slug")
+            if (
+                game_slug
+                and game_slug in excluded_slugs
+            ):
+                continue
             if not self._matches_mandatory_constraints(
                 game,
                 request_data,
             ):
                 continue
-
             score, reasons = (
                 self._calculate_game_score(
                     game,
                     request_data,
                 )
             )
-
             enriched_game = dict(game)
-
             enriched_game[
                 "_recommendation_score"
             ] = score
-
             enriched_game[
                 "_recommendation_reasons"
             ] = reasons
-
             enriched_game[
                 "_coop_tier"
             ] = self._coop_tier(
@@ -875,11 +908,9 @@ class RecommendationEngine:
                     game
                 )
             )
-
             ranked_games.append(
                 enriched_game
             )
-
         if (
             "co-op"
             in request_data[
@@ -925,5 +956,4 @@ class RecommendationEngine:
                 ),
                 reverse=True,
             )
-
         return ranked_games[:limit]

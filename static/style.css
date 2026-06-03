@@ -263,7 +263,7 @@ body {
     border-radius: 18px;
     line-height: 1.55;
     font-size: 0.98rem;
-    white-space: pre-wrap;
+    white-space: pre-line;
     overflow-wrap: anywhere;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
@@ -385,4 +385,15 @@ body {
     .chat-input-area button {
         min-height: 52px;
     }
+
+    .message.bot {
+        align-self: flex-start;
+    }
+
+    .message.bot .bubble {
+        width: fit-content;
+        max-width: 100%;
+        text-align: left;
+    }
+
 }
