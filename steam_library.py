@@ -6,9 +6,8 @@ class SteamLibraryManager:
     MATCH_THRESHOLD = 0.88
     MIN_TOKEN_OVERLAP = 0.60
 
-    def __init__(self, steam_service, rawg_service):
+    def __init__(self, steam_service):
         self.steam = steam_service
-        self.rawg = rawg_service
 
     def load_library(self, steamid):
         return self.steam.get_owned_games(
@@ -230,32 +229,6 @@ class SteamLibraryManager:
             )
         return owned_results
 
-    def recommend_from_library(
-        self,
-        rawg_result,
-        steam_library_map,
-        limit=5,
-        prioritize_less_played=True,
-    ):
-        rawg_games = rawg_result.get(
-            "results",
-            []
-        )
-        owned_games = (
-            self.filter_owned_games_from_rawg_results(
-                rawg_games,
-                steam_library_map,
-            )
-        )
-        if prioritize_less_played:
-            owned_games.sort(
-                key=lambda game: game.get(
-                    "steam_playtime_forever",
-                    0,
-                )
-            )
-        return owned_games[:limit]
-
     def _format_reasons_text(self, reasons):
         cleaned_reasons = []
         for reason in reasons:
@@ -352,18 +325,4 @@ class SteamLibraryManager:
             "• recomiéndame algo de mi biblioteca\n"
             "• un RPG de mi biblioteca\n"
             "• un juego con historia de mi biblioteca"
-        )
-
-    def get_most_played_game(
-        self,
-        steam_games,
-    ):
-        if not steam_games:
-            return None
-        return max(
-            steam_games,
-            key=lambda game: game.get(
-                "playtime_forever",
-                0,
-            ),
         )

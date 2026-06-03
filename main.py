@@ -22,7 +22,6 @@ class RawgGameChatbot:
         self.steam = SteamService()
         self.steam_library_manager = SteamLibraryManager(
             self.steam,
-            self.rawg,
         )
         self.extractor = FilterExtractor(
             self.rawg
@@ -31,7 +30,6 @@ class RawgGameChatbot:
             self.rawg
         )
         self.profile_priority = PROFILE_PRIORITY
-        self.platform_map = PLATFORM_MAP
         self.facts = set()
         self._load_knowledge_base()
         self.reset()
@@ -1015,54 +1013,6 @@ class RawgGameChatbot:
             )
         return "\n".join(
             lines
-        )
-
-    def _details_from_index(
-        self,
-        text,
-    ): #puedo eliminar
-        index = (
-            self.extractor
-            .extract_index_reference(
-                text
-            )
-        )
-        if index is None:
-            return None
-        if not self.context[
-            "last_results"
-        ]:
-            return (
-                "No tengo resultados anteriores. "
-                "Haz primero una búsqueda."
-            )
-        result_index = index - 1
-        if (
-            result_index < 0
-            or result_index
-            >= len(
-                self.context[
-                    "last_results"
-                ]
-            )
-        ):
-            return (
-                "Ese número no corresponde "
-                "a ningún juego de la última búsqueda."
-            )
-        game = self.context[
-            "last_results"
-        ][result_index]
-        details = self.rawg.get_game_details(
-            game["slug"]
-        )
-        self.context[
-            "last_game_slug"
-        ] = details.get(
-            "slug"
-        )
-        return format_game_details(
-            details
         )
 
     def _normalize_game_name(

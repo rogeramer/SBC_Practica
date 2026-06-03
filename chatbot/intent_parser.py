@@ -207,13 +207,24 @@ def _contains_phrase(
         )
     )
 
-
 def detect_intent(text):
     clean_text = _normalize_text(
         text
     )
+    standalone_intents = {
+        "greeting",
+        "farewell",
+    }
+    for intent, keywords in INTENT_KEYWORDS:
+        if intent not in standalone_intents:
+            continue
+        for keyword in keywords:
+            if clean_text == keyword:
+                return intent
 
     for intent, keywords in INTENT_KEYWORDS:
+        if intent in standalone_intents:
+            continue
         for keyword in sorted(
             keywords,
             key=len,
@@ -224,5 +235,4 @@ def detect_intent(text):
                 keyword,
             ):
                 return intent
-
     return "search"

@@ -262,21 +262,6 @@ class FilterExtractor:
                 lookup[slug] = item
         return lookup
 
-    def extract_index_reference(
-        self,
-        text,
-    ):
-        match = re.search(
-            r"\b(\d+)\b",
-            text,
-        )
-
-        if not match:
-            return None
-
-        return int(
-            match.group(1)
-        )
 
     def references_last_result(self, text):
         last_result_markers = [
@@ -309,6 +294,24 @@ class FilterExtractor:
             return None
         return int(
             match.group(1)
+        )
+
+    def references_last_result(self, text):
+        last_result_markers = [
+            "ultimo",
+            "ultima",
+            "el ultimo",
+            "la ultima",
+            "ultimo juego",
+            "ultima recomendacion",
+            "el ultimo juego",
+            "el ultimo recomendado",
+            "el ultimo que has recomendado",
+            "el ultimo que me has recomendado",
+        ]
+        return any(
+            marker in text
+            for marker in last_result_markers
         )
 
     def references_last_result(self, text):
